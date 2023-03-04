@@ -6,21 +6,266 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1066</width>
-    <height>736</height>
+    <width>947</width>
+    <height>731</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">
+
+/*-----QWidget-----*/
+QWidget
+{
+	color: #000000;
+	border-color: #000000;
+	background-color: rgb(16, 10, 3);
+
+}
+
+
+/*-----QLabel-----*/
+QLabel
+{
+
+font-family: 'Josefin Sans', sans-serif;
+font-size: 12pt;
+font-weight: 500;
+letter-spacing: 0.22rem;
+font-style: oblique;
+text-transform: capitalize;
+color: #FFFFFF;
+border-radius: 1 px;
+border-style: solid;
+border-color: #000000;
+	background-color: transparent;
+
+}
+
+
+/*-----QPushButton-----*/
+QPushButton
+{
+	color: #fff;
+	background-color: rgba(80, 255, 130, 200);
+	font-weight: bold;
+	border-style: solid;
+	border-width: 1px;
+	border-radius: 17px;
+	border-color: #000;
+	padding: 10px;
+
+}
+
+
+QPushButton::hover
+{
+	background-color: lightgrey;
+	color: #000;
+
+}
+
+
+QPushButton::pressed
+{
+	background-color: lightgreen;
+	color: #fff;
+
+}
+
+
+/*-----QToolButton-----*/
+QToolButton
+{
+	background-color: #292f45;
+	color: #000000;
+	border-style: solid;
+	border-color: #000000;
+
+}
+
+
+QToolButton::hover
+{
+	background-color: #fc7c11;
+	color: #000000;
+	padding: 2px;
+	border-radius: 15px;
+	border-color: #fc7c11;
+
+}
+
+
+QToolButton::pressed
+{
+	background-color: #fc7c11;
+	color: #000000;
+	border-style: solid;
+	border-width: 2px;
+
+}
+
+
+/*-----QLineEdit-----*/
+QLineEdit{
+	background-color: #292f45;
+	color: #b9b9bb;
+	font-weight: bold;
+	border-style: solid;
+	border-width: 2px;
+	border-top: 0px;
+	border-left: 0px;
+	border-right: 0px;
+	border-color: #b9b9bb;
+	padding: 10px;
+
+}
+
+
+/*-----QCheckBox-----*/
+QCheckBox
+{
+	background-color: transparent;
+	color: #b9b9bb;
+	font-weight: bold;
+
+}
+
+
+QCheckBox::indicator
+{
+    color: #b1b1b1;
+    background-color: #00111d;
+    border: 1px solid #f0742f;
+    width: 12px;
+    height: 12px;
+
+}
+
+
+QCheckBox::indicator:checked
+{
+    image:url(&quot;./ressources/check.png&quot;); /*To replace*/
+	background-color: #1f2b2b;
+    border: 1px solid #f0742f;
+
+}
+
+
+QCheckBox::indicator:unchecked:hover
+{
+    border: 1px solid #f0742f;
+
+}
+
+
+QCheckBox::disabled
+{
+	color: #656565;
+
+}
+
+
+QCheckBox::indicator:disabled
+{
+	background-color: #656565;
+	color: #656565;
+    border: 1px solid #656565;
+
+}
+
+QRadioButton
+{
+	
+font-family: 'Josefin Sans', sans-serif;
+font-size: 8pt;
+font-weight: 500;
+    spacing: 5px;
+    outline: none;
+    color: #bbb;
+    margin-bottom: 2px;
+}
+
+QRadioButton:disabled
+{
+    color: #777777;
+}
+QTabBar {
+
+  background-color: transparent;
+  height: 30px;
+	font-weight: 500;
+	font-size: 10pt;
+	
+	font-family: &quot;Segoe Print&quot;;
+}
+
+QTabBar::tab {
+border: 1px solid grey;
+border-radius: 12px ;
+background-color: rgba(236, 236, 236, 200);
+
+  border: 1px solid #CCCCCC;
+  color: #333333;
+  padding: 5px 10px;
+  margin: 3px;
+ 
+}
+
+QTabWidget::tab-bar{alignment:center;}
+
+QTabBar::tab:!selected {
+	
+  color: #FFFFFF;
+	background-color: qlineargradient(spread:repeat, x1:1, y1:0, x2:1, y2:1, stop:0 rgba(234, 208, 174, 255), stop:0.472637 rgba(152, 97, 0, 255));
+}
+
+QTabBar::tab:hover{
+background-color: rgba(245, 245, 245, 120);
+
+}
+
+/*-----QComboBox-----*/
+QComboBox
+{
+    padding-left: 6px;
+	border: 1px solid #1d1d1d;
+	background-color: rgb(158, 101, 1);
+    color: #fff;
+    height: 20px;
+
+}
+
+
+QComboBox:on
+{
+    background-color: transparent;
+	color: #fff;
+
+}
+
+
+QComboBox QAbstractItemView
+{
+    background-color: transparent;
+    color: #fff;
+    selection-background-color: #fea732;
+	selection-color: #000;
+    outline: 0;
+
+}
+</string>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
-      <x>50</x>
+      <x>250</x>
       <y>60</y>
       <width>431</width>
-      <height>30</height>
+      <height>40</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="3,5">
@@ -53,10 +298,10 @@
    <widget class="QWidget" name="layoutWidget_2">
     <property name="geometry">
      <rect>
-      <x>45</x>
-      <y>120</y>
-      <width>435</width>
-      <height>421</height>
+      <x>125</x>
+      <y>110</y>
+      <width>671</width>
+      <height>541</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -70,6 +315,18 @@
        </property>
        <property name="mouseTracking">
         <bool>true</bool>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QLabel{
+border: 1px solid lightgrey;
+
+}</string>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::NoFrame</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Plain</enum>
        </property>
        <property name="text">
         <string/>
