@@ -19,7 +19,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         super(ApplicationWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-
         # adding items to combobox
         self.ui.comboBox_property.addItems(
             ["Original", "T1", "T2", "SD"])
@@ -32,21 +31,31 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     # create a function to get the pixel value of the image
     def getPixel(self, event):
         #get image from combobox function and convert it to numpy array to get pixel value
-        if self.ui.comboBox_property.currentIndex() == 0:
-            img = qimage2ndarray.rgb_view(self.image_orignal)
-        elif self.ui.comboBox_property.currentIndex() == 1:
-            img = qimage2ndarray.rgb_view(self.t1(self.image))
-        elif self.ui.comboBox_property.currentIndex() == 2:
-            img = qimage2ndarray.rgb_view(self.t2(self.image))
-        elif self.ui.comboBox_property.currentIndex() == 3:
-            img = qimage2ndarray.rgb_view(self.SD(self.image))
-        else:
-            pass
+        self.orgImg = qimage2ndarray.rgb_view(self.image_orignal)
+        self.imgT1 = qimage2ndarray.rgb_view(self.t1(self.image))
+        self.imgT2 = qimage2ndarray.rgb_view(self.t2(self.image))
+        self.imgSD = qimage2ndarray.rgb_view(self.SD(self.image))
+
+
+
+        # if self.ui.comboBox_property.currentIndex() == 0:
+        #     self.img = qimage2ndarray.rgb_view(self.image_orignal)
+        # elif self.ui.comboBox_property.currentIndex() == 1:
+        #     self.img = qimage2ndarray.rgb_view(self.t1(self.image))
+        # elif self.ui.comboBox_property.currentIndex() == 2:
+        #     self.img = qimage2ndarray.rgb_view(self.t2(self.image))
+        # elif self.ui.comboBox_property.currentIndex() == 3:
+        #     self.img = qimage2ndarray.rgb_view(self.SD(self.image))
+        # else:
+        #     pass
         x = event.pos().x()
         y = event.pos().y()
-        print(img[x,y])
-        
-
+        print(self.imgT1[x,y])
+        print(self.imgT2[x,y])
+        print(self.imgSD[x,y])
+        self.ui.lineEdit_t1.setText(str(self.imgT1[x,y][1]))
+        self.ui.lineEdit_t2.setText(str(self.imgT2[x,y][1]))
+        self.ui.lineEdit_sd.setText(str(self.imgSD[x,y][1]))
 
     def browse(self):
         loadImg = QFileDialog.getOpenFileName(self, 'Open file')
@@ -138,3 +147,4 @@ if __name__ == "__main__":
     application = ApplicationWindow()
     application.show()
     sys.exit(app.exec_())
+
