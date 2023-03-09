@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QFileDialog, QGraphicsScene, QGraphicsView, QGraphic
 from PyQt5.QtGui import QPixmap, QPainter, QColor, QImage
 from gui import Ui_MainWindow
 import sys
-import math
+import math as m
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
@@ -25,7 +25,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         super(ApplicationWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-
         # for plot sequence
         self.figure_sequence = plt.figure()
         self.canvas_sequence = FigureCanvas(self.figure_sequence)
@@ -60,11 +59,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.imgT2 = qimage2ndarray.rgb_view(self.t2(self.image))
             self.imgSD = qimage2ndarray.rgb_view(self.SD(self.image))
 
-            x = event.pos().x()
-            y = event.pos().y()
-            print(self.imgT1[x, y])
-            print(self.imgT2[x, y])
-            print(self.imgSD[x, y])
+            currentWidth = self.ui.label_view_img.width()
+            currentHeight = self.ui.label_view_img.height()
+
+            x = int(((event.pos().x())*64) / currentWidth)
+            y = int(((event.pos().y())*64) / currentHeight)
+
             self.ui.lineEdit_t1.setText(str(self.imgT1[x, y][1]))
             self.ui.lineEdit_t2.setText(str(self.imgT2[x, y][1]))
             self.ui.lineEdit_sd.setText(str(self.imgSD[x, y][1]))
@@ -72,16 +72,74 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             print(e)
 
     def browse(self):
-        try:
+        # try:
             loadImg = QFileDialog.getOpenFileName(self, 'Open file')
             self.image = cv2.imread(loadImg[0], 0)
+            self.image = cv2.resize(self.image, (64,64))
+            # print(self.image.shape)
+            self.rgbImage = cv2.cvtColor(self.image, cv2.COLOR_GRAY2RGB)
+            self.M = self.rgbImage
+            self.k_space = self.rgbImage
             self.image_orignal = qimage2ndarray.array2qimage(self.image)
             self.ui.label_view_img.setPixmap(QPixmap(self.image_orignal))
-            self.image.resize(256, 256)
+            # print(self.rgbImage)
+            print(self.rgbImage[0][0])
             plt.imshow(self.image, cmap='gray')
-        except Exception as e:
-            print(e)
+            self.RF()
+        # except Exception as e:
+        #     print(e)
     # combobox function  for selecting image property
+
+    def Rx(self,theta):
+        return np.matrix([[ 1, 0           , 0           ],
+                        [ 0, m.cos(theta),-m.sin(theta)],
+                        [ 0, m.sin(theta), m.cos(theta)]])
+ 
+    def Ry(self,theta):
+        return np.matrix([[ m.cos(theta), 0, m.sin(theta)],
+                        [ 0           , 1, 0           ],
+                        [-m.sin(theta), 0, m.cos(theta)]])
+    
+    def Rz(self,theta):
+        return np.matrix([[ m.cos(theta), -m.sin(theta), 0 ],
+                        [ m.sin(theta), m.cos(theta) , 0 ],
+                        [ 0           , 0            , 1 ]])
+    
+    def RF(self):
+        for i in range(63):
+            for j in range(63):
+                self.rgbImage[i][j] = np.dot(self.Rx(m.radians(90)),self.rgbImage[i][j])
+                
+        # # hh=[[254],[254],[254]]
+        # newRF = np.dot(self.Rx(m.radians(90)),self.rgbImage[0][0])
+        self.phaseGradient()
+        # print(self.rgbImage)
+
+    def phaseGradient(self):
+        self.i1 = -1
+        # phaseValue = 360 / 64 = 5.625 in degrees
+        for phaseAngle in decimal_range(0, 360, 5.625):
+            self.i1 = self.i1 + 1
+            for i in range(63):
+                for j in range(63):
+                    self.M[i][j] = np.dot(self.Rz(m.radians(phaseAngle)),self.rgbImage[i][j])   #  M1
+
+            self.freqGradient()
+
+
+
+    def freqGradient(self): 
+        self.i2 = -1
+        for freqAngle in decimal_range(0, 360, 5.625):
+            self.i2 = self.i2 + 1
+            PixelSummation = [0,0,0]
+            for i in range(63):
+                for j in range(63):    
+                    self.M[i][j] = np.dot(self.Rz(m.radians(freqAngle)),self.M[i][j])
+                    PixelSummation = PixelSummation + self.M[i][j]
+             #i1 = 1   i2 = 0
+            self.k_space[self.i1,self.i2] = PixelSummation
+        # print(self.M)
 
     def plot(self):
         try:
@@ -158,7 +216,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 in_image == 0     # water
             ]
             values = [self.map_range(500), self.map_range(
-                800), self.map_range(250), self.map_range(3000)]
+            800), self.map_range(250), self.map_range(3000)]
 
             # Apply the conditionals and assign values in a single step
             shepp_t1 = np.select(conditions, values,
@@ -181,7 +239,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 in_image == 0     # water
             ]
             values = [self.map_range(80), self.map_range(
-                100), self.map_range(55), self.map_range(2000)]
+            100), self.map_range(55), self.map_range(2000)]
 
             # Apply the conditionals and assign values in a single step
             shepp_t2 = np.select(conditions, values,
@@ -219,6 +277,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         except Exception as e:
             print(e)
 
+
+def decimal_range(start, stop, increment):
+    while start < stop: # and not math.isclose(start, stop): Py>3.5
+        yield start
+        start += increment
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
