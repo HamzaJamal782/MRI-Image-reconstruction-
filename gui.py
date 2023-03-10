@@ -291,9 +291,6 @@ class Ui_MainWindow(object):
         self.pushButton_Browse = QtWidgets.QPushButton(self.tab_phantom)
         self.pushButton_Browse.setObjectName("pushButton_Browse")
         self.horizontalLayout_3.addWidget(self.pushButton_Browse)
-        self.pushButton_test = QtWidgets.QPushButton(self.tab_phantom)
-        self.pushButton_test.setObjectName("pushButton_test")
-        self.horizontalLayout_3.addWidget(self.pushButton_test)
         self.horizontalLayout_5 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_5.setObjectName("horizontalLayout_5")
         self.label_7 = QtWidgets.QLabel(self.tab_phantom)
@@ -460,7 +457,6 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.pushButton_Browse.setText(_translate("MainWindow", "Browse"))
-        self.pushButton_test.setText(_translate("MainWindow", "test"))
         self.label_7.setText(_translate("MainWindow", "choose size of image"))
         self.label.setText(_translate("MainWindow", "choose property"))
         self.label_2.setText(_translate("MainWindow", "T1"))

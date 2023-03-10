@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import *
-from PyQt5.QtWidgets import QFileDialog, QGraphicsScene, QGraphicsView, QGraphicsPixmapItem, QDialog
+from PyQt5.QtWidgets import QFileDialog,QApplication
 from PyQt5.QtGui import QPixmap, QPainter, QColor, QImage
 from gui import Ui_MainWindow
 import sys
@@ -25,6 +25,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         super(ApplicationWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        QApplication.processEvents()
 
         # initializing variables
         self.image = np.zeros((16, 16), dtype=np.uint8)
@@ -55,7 +56,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         # connect ui elements to functions
         self.ui.pushButton_Browse.clicked.connect(self.browse)
-        self.ui.pushButton_Plot.clicked.connect(self.upload)
+        self.ui.pushButton_Plot.clicked.connect(self.plot)
         self.ui.comboBox_property.currentIndexChanged.connect(
             self.combobox_select_property)
         self.ui.label_view_img.mousePressEvent = self.getPixel
@@ -114,20 +115,21 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             print(e)
 
     def browse(self):
-        # try:
-        loadImg = QFileDialog.getOpenFileName(self, 'Open file')
-        self.image = cv2.imread(loadImg[0], 0)
-        # self.image = cv2.resize(self.image, (10, 10))
-        self.rgbImage = cv2.cvtColor(self.image, cv2.COLOR_GRAY2RGB)
-        self.rgbImage = cv2.resize(self.image, (int(self.row), int(self.col)))
-        self.image_orignal = qimage2ndarray.array2qimage(self.image)
-        self.ui.label_view_img.setPixmap(QPixmap(self.image_orignal))
-        # print(self.rgbImage)
-        # print(self.rgbImage[0][5])
-        plt.imshow(self.image, cmap='gray')
-        self.RF()
-        # except Exception as e:
-        #     print(e)
+        try:
+            loadImg = QFileDialog.getOpenFileName(self, 'Open file')
+            self.image = cv2.imread(loadImg[0], 0)
+            self.image = cv2.resize(self.image, (int(self.row), int(self.col)))
+            print(self.image.shape)
+            self.rgbImage = cv2.cvtColor(self.image, cv2.COLOR_GRAY2RGB)
+            self.rgbImage = cv2.resize(self.image, (int(self.row), int(self.col)))
+            self.image_orignal = qimage2ndarray.array2qimage(self.image)
+            self.image_orignal = self.image_orignal.scaled(int(self.row), int(self.col))
+            self.ui.label_view_img.setPixmap(QPixmap(self.image_orignal))
+            plt.imshow(self.image, cmap='gray')
+
+            # self.RF()
+        except Exception as e:
+            print(e)
 
     def Rx(self, theta):
         return np.matrix([[1, 0, 0],
@@ -153,7 +155,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             for j in range(int(self.col)):
                 self.M[i][j] = np.ravel(
                     np.dot(self.Rx(m.radians(90)), self.rgbImage[i][j]))
-
         self.phaseGradient()
 
     def phaseGradient(self):
@@ -193,38 +194,47 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def plot(self):
         try:
             self.figure_sequence.clear()
-            x1 = np.linspace(-50, 100, 500)
-            y1 = np.sinc(x1)
-            x2 = np.linspace(-50, 100, 6)
-            y2 = [0, 0, 1.5, 1.5, 0, 0]
-            y3 = np.tan(x1)
+            t = np.linspace(0, 50, 1000)
+            y1 = np.sinc(t)
+            y2 = np.where(np.sin(t) > 0, 1, -1)
+            y3 = np.sin(t)
 
             axs = self.figure_sequence.subplots(5)
             self.figure_sequence.suptitle('Sequence')
 
-            axs[0].plot(x1, y1)
+            axs[0].plot(t, y1 , color='red')
             axs[0].set_ylabel('RF')
             axs[0].set_frame_on(False)
             axs[0].xaxis.set_visible(False)
+            axs[0].axhline(y=0, color='black')
+            axs[0].tick_params(axis='y', colors= 'red')
 
-            axs[1].plot(x2, y2)
+            axs[1].plot(t, y2, color='green')
             axs[1].set_ylabel('GX')
             axs[1].set_frame_on(False)
             axs[1].xaxis.set_visible(False)
+            axs[1].axhline(y=0, color='black')
+            axs[1].tick_params(axis='y', colors='green')
 
-            axs[2].plot(x2, y2)
+            axs[2].plot(t, y2,    color='blue')
             axs[2].set_ylabel('GY')
             axs[2].xaxis.set_visible(False)
             axs[2].set_frame_on(False)
+            axs[2].axhline(y=0, color='black')
+            axs[2].tick_params(axis='y', colors='blue')
 
-            axs[3].plot(x2, y2)
+            axs[3].plot(t, y2, color='black')
             axs[3].set_ylabel('GZ')
             axs[3].xaxis.set_visible(False)
             axs[3].set_frame_on(False)
+            axs[3].axhline(y=0, color='black')
+            axs[3].tick_params(axis='y', colors='brown')
 
-            axs[4].plot(x1, y3)
+            axs[4].plot(t, y3)
             axs[4].set_ylabel('Read Out')
             axs[4].set_frame_on(False)
+            axs[4].axhline(y=0, color='black')
+            
 
             self.canvas_sequence.draw()
         except Exception as e:
