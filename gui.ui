@@ -299,7 +299,7 @@ QComboBox QAbstractItemView
            <number>57</number>
           </property>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="3,5">
+           <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,0,0,0">
             <item>
              <widget class="QPushButton" name="pushButton_Browse">
               <property name="text">
@@ -308,7 +308,47 @@ QComboBox QAbstractItemView
              </widget>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout">
+             <widget class="QPushButton" name="pushButton_test">
+              <property name="text">
+               <string>test</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="0,1">
+              <item>
+               <widget class="QLabel" name="label_7">
+                <property name="font">
+                 <font>
+                  <family>Josefin Sans,sans-serif</family>
+                  <pointsize>12</pointsize>
+                  <weight>62</weight>
+                  <italic>true</italic>
+                  <bold>true</bold>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>choose size of image</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="comboBox_size">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1">
               <item>
                <widget class="QLabel" name="label">
                 <property name="text">
