@@ -17,6 +17,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import pandas as pd
 import matplotlib.patches as patches
+import json
 
 
 
@@ -25,7 +26,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         super(ApplicationWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+
+        self.M = [[0 for i in range(10)] for j in range(10)]
+        self.k_space = [[0 for i in range(10)] for j in range(10)]
+        self.count = 0
         # for plot sequence
+
         self.figure_sequence = plt.figure()
         self.canvas_sequence = FigureCanvas(self.figure_sequence)
         self.ui.horizontalLayout_Sequence.addWidget(self.canvas_sequence)
@@ -46,7 +52,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         # connect ui elements to functions
         self.ui.pushButton_Browse.clicked.connect(self.browse)
-        self.ui.pushButton_Plot.clicked.connect(self.plot)
+        self.ui.pushButton_Plot.clicked.connect(self.upload)
         self.ui.comboBox_property.currentIndexChanged.connect(self.combobox)
         self.ui.label_view_img.mousePressEvent = self.getPixel
 
@@ -62,8 +68,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             currentWidth = self.ui.label_view_img.width()
             currentHeight = self.ui.label_view_img.height()
 
-            x = int(((event.pos().x())*64) / currentWidth)
-            y = int(((event.pos().y())*64) / currentHeight)
+            x = int(((event.pos().x())*10) / currentWidth)
+            y = int(((event.pos().y())*10) / currentHeight)
 
             self.ui.lineEdit_t1.setText(str(self.imgT1[x, y][1]))
             self.ui.lineEdit_t2.setText(str(self.imgT2[x, y][1]))
@@ -75,15 +81,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         # try:
             loadImg = QFileDialog.getOpenFileName(self, 'Open file')
             self.image = cv2.imread(loadImg[0], 0)
-            self.image = cv2.resize(self.image, (64,64))
+            self.image = cv2.resize(self.image, (10,10))
             # print(self.image.shape)
             self.rgbImage = cv2.cvtColor(self.image, cv2.COLOR_GRAY2RGB)
-            self.M = self.rgbImage
-            self.k_space = self.rgbImage
             self.image_orignal = qimage2ndarray.array2qimage(self.image)
             self.ui.label_view_img.setPixmap(QPixmap(self.image_orignal))
             # print(self.rgbImage)
-            print(self.rgbImage[0][0])
+            print(self.rgbImage[0][5])
             plt.imshow(self.image, cmap='gray')
             self.RF()
         # except Exception as e:
@@ -106,23 +110,21 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                         [ 0           , 0            , 1 ]])
     
     def RF(self):
-        for i in range(63):
-            for j in range(63):
-                self.rgbImage[i][j] = np.dot(self.Rx(m.radians(90)),self.rgbImage[i][j])
-                
-        # # hh=[[254],[254],[254]]
-        # newRF = np.dot(self.Rx(m.radians(90)),self.rgbImage[0][0])
+        for i in range(10):
+            for j in range(10):
+                self.M[i][j] = np.ravel(np.dot(self.Rx(m.radians(90)),self.rgbImage[i][j]))
+                # print(self.M[i][j])
+
         self.phaseGradient()
-        # print(self.rgbImage)
 
     def phaseGradient(self):
         self.i1 = -1
-        # phaseValue = 360 / 64 = 5.625 in degrees
-        for phaseAngle in decimal_range(0, 360, 5.625):
+        # phaseValue = 360 / 10 = 36 in degrees
+        for phaseAngle in range(0, 360, 36):
             self.i1 = self.i1 + 1
-            for i in range(63):
-                for j in range(63):
-                    self.M[i][j] = np.dot(self.Rz(m.radians(phaseAngle)),self.rgbImage[i][j])   #  M1
+            for i in range(10):
+                for j in range(10):
+                    self.M[i][j] = np.ravel(np.dot(self.M[i][j],self.Rz(m.radians(phaseAngle))))  #  M1
 
             self.freqGradient()
 
@@ -130,56 +132,67 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def freqGradient(self): 
         self.i2 = -1
-        for freqAngle in decimal_range(0, 360, 5.625):
+        for freqAngle in range(0, 360, 36):
             self.i2 = self.i2 + 1
             PixelSummation = [0,0,0]
-            for i in range(63):
-                for j in range(63):    
-                    self.M[i][j] = np.dot(self.Rz(m.radians(freqAngle)),self.M[i][j])
+            for i in range(10):
+                for j in range(10):    
+                    self.M[i][j] = np.ravel(np.dot(self.M[i][j],self.Rz(m.radians(freqAngle))))
                     PixelSummation = PixelSummation + self.M[i][j]
-             #i1 = 1   i2 = 0
-            self.k_space[self.i1,self.i2] = PixelSummation
-        # print(self.M)
+            # self.count = self.count + 1
+            print(PixelSummation)
+            self.k_space[self.i1][self.i2] = PixelSummation
+        # print(self.k_space)
+
+
+    def upload(self):
+        f = open("../Image-reconstruction--main/data.json","r")
+        self.data = json.load(f)
+        for i in self.data:
+            print(i)
+        
+        self.plot()
 
     def plot(self):
-        try:
+        # try:
             self.figure_sequence.clear()
-            x = np.linspace(-10, 10, 500)
-            y1 = np.sinc(x)
-            y2 = np.cos(x)
-            y3 = np.tan(x)
+            x1 = np.linspace(-50, 100, 500)
+            y1 = np.sinc(x1)
+            x2 = np.linspace(-50, 100, 6)
+            y2 = [0,0,1.5,1.5,0,0]
+            y3 = np.tan(x1)
 
-            axs = self.figure_sequence.subplots(5, sharex=True)
+            axs = self.figure_sequence.subplots(5)
             self.figure_sequence.suptitle('Sequence')
           
            
-            axs[0].plot(x, y1 ** 2)
+            axs[0].plot(x1, y1)
             axs[0].set_ylabel('RF')
             axs[0].set_frame_on(False)
             axs[0].xaxis.set_visible(False)
 
-            axs[1].plot(x, 0.3 * y2)
+            axs[1].plot(x2, y2)
             axs[1].set_ylabel('GX')
             axs[1].set_frame_on(False)
             axs[1].xaxis.set_visible(False)
 
-            axs[2].plot(x, 0.3 * y2)
+            axs[2].plot(x2, y2)
             axs[2].set_ylabel('GY')
             axs[2].xaxis.set_visible(False)
             axs[2].set_frame_on(False)
 
-            axs[3].plot(x, 0.3 * y2)
+            axs[3].plot(x2,y2)
             axs[3].set_ylabel('GZ')
             axs[3].xaxis.set_visible(False)
             axs[3].set_frame_on(False)
 
-            axs[4].plot(x, y3)
+            axs[4].plot(x1, y3)
             axs[4].set_ylabel('Read Out')
             axs[4].set_frame_on(False)
 
             self.canvas_sequence.draw()
-        except Exception as e:
-            print(e)
+        # except Exception as e:
+        #     print(e)
 
     def combobox(self, index):
         try:
