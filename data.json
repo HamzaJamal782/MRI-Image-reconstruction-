@@ -1,7 +1,17 @@
-{
-    "RF": 90,
-    "GX": 90,
-    "GY": 90,
-    "GZ":"",
-    "ReadOut": ""
+[{
+    "name": "RF_Pulse",
+    "RF_Time":5,
+    "RF_amplitude": 90
+}, {
+    "name": "Gx_pulse",
+    "Gx_Time":5,
+    "Gx_amplitude": 5
+}, {
+    "name": "Gy_Pulse",
+    "Gy_Time":5,
+    "Gy_amplitude": 5
+}, {
+    "name":"Readout",
+    "Readout_Time":5
 }
+]

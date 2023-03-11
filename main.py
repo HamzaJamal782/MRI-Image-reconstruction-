@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import *
-from PyQt5.QtWidgets import QFileDialog,QApplication
+from PyQt5.QtWidgets import QFileDialog, QApplication
 from PyQt5.QtGui import QPixmap, QPainter, QColor, QImage
 from gui import Ui_MainWindow
 import sys
@@ -56,7 +56,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         # connect ui elements to functions
         self.ui.pushButton_Browse.clicked.connect(self.browse)
-        self.ui.pushButton_Plot.clicked.connect(self.plot)
+        self.ui.pushButton_Plot.clicked.connect(self.upload)
         self.ui.comboBox_property.currentIndexChanged.connect(
             self.combobox_select_property)
         self.ui.label_view_img.mousePressEvent = self.getPixel
@@ -121,9 +121,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.image = cv2.resize(self.image, (int(self.row), int(self.col)))
             print(self.image.shape)
             self.rgbImage = cv2.cvtColor(self.image, cv2.COLOR_GRAY2RGB)
-            self.rgbImage = cv2.resize(self.image, (int(self.row), int(self.col)))
+            self.rgbImage = cv2.resize(
+                self.image, (int(self.row), int(self.col)))
             self.image_orignal = qimage2ndarray.array2qimage(self.image)
-            self.image_orignal = self.image_orignal.scaled(int(self.row), int(self.col))
+            self.image_orignal = self.image_orignal.scaled(
+                int(self.row), int(self.col))
             self.ui.label_view_img.setPixmap(QPixmap(self.image_orignal))
             plt.imshow(self.image, cmap='gray')
 
@@ -184,63 +186,109 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         # print(self.k_space)
 
     def upload(self):
-        f = open("../Image-reconstruction--main/data.json", "r")
-        self.data = json.load(f)
-        for i in self.data:
-            print(i)
+        self.figure_sequence.clear()
+        self.data = json.load(open("data.json", "r"))
+        axs = self.figure_sequence.subplots(4, sharex=True)
+        self.figure_sequence.suptitle('Sequence')
 
-        self.plot()
+        for dictionary in self.data:
+            if dictionary['name'] == "RF_Pulse":
+                self.RF_duration = np.linspace(0, dictionary['RF_Time'], 100)
+                self.RF_amplitude = dictionary["RF_amplitude"] * \
+                    abs(np.sinc(self.RF_duration))
+                axs[0].plot(self.RF_duration, self.RF_amplitude, color='red')
+                axs[0].set_ylabel('RF')
+                axs[0].set_frame_on(False)
+                axs[0].xaxis.set_visible(False)
+                axs[0].axhline(y=0, color='black')
+                axs[0].tick_params(axis='y', colors='red')
 
-    def plot(self):
-        try:
-            self.figure_sequence.clear()
-            t = np.linspace(0, 50, 1000)
-            y1 = np.sinc(t)
-            y2 = np.where(np.sin(t) > 0, 1, -1)
-            y3 = np.sin(t)
+            if dictionary['name'] == "Gx_pulse":
+                self.Gx_duration = np.linspace(0, dictionary['Gx_Time'], 100)
+                self.Gx_amplitude = dictionary["Gx_amplitude"] * \
+                    np.where(self.Gx_duration < dictionary["Gx_Time"],  1, 0)
+                axs[1].plot(self.Gx_duration, self.Gx_amplitude, color='green')
+                axs[1].set_ylabel('Gx')
+                axs[1].set_frame_on(False)
+                axs[1].xaxis.set_visible(False)
+                axs[1].axhline(y=0, color='black')
+                axs[1].tick_params(axis='y', colors='green')
 
-            axs = self.figure_sequence.subplots(5)
-            self.figure_sequence.suptitle('Sequence')
+            if dictionary['name'] == "Gy_Pulse":
+                self.Gy_duration = np.linspace(
+                    len(self.RF_duration), dictionary['Gy_Time'], 100)
+                self.Gy_amplitude = dictionary["Gy_amplitude"] * np.where(
+                    self.Gy_duration > dictionary["Gy_Time"],  1, 0)
+                axs[2].plot(self.Gy_duration, self.Gy_amplitude, color='blue')
+                axs[2].set_ylabel('Gy')
+                axs[2].set_frame_on(False)
+                axs[2].xaxis.set_visible(False)
+                axs[2].axhline(y=0, color='black')
+                axs[2].tick_params(axis='y', colors='blue')
 
-            axs[0].plot(t, y1 , color='red')
-            axs[0].set_ylabel('RF')
-            axs[0].set_frame_on(False)
-            axs[0].xaxis.set_visible(False)
-            axs[0].axhline(y=0, color='black')
-            axs[0].tick_params(axis='y', colors= 'red')
+            if dictionary['name'] == "Readout":
+                self.RO_duration = np.linspace(
+                    len(self.RF_duration), dictionary['Readout_Time'], 100)
+                self.RO_amplitude = abs(np.sinc(self.RO_duration))
+                axs[3].plot(self.RO_duration, self.RO_amplitude, color='brown')
+                axs[3].set_ylabel('RO')
+                axs[3].set_frame_on(False)
+                axs[3].xaxis.set_visible(True)
+                axs[3].axhline(y=0, color='black')
+                axs[3].tick_params(axis='y', colors='brown')
 
-            axs[1].plot(t, y2, color='green')
-            axs[1].set_ylabel('GX')
-            axs[1].set_frame_on(False)
-            axs[1].xaxis.set_visible(False)
-            axs[1].axhline(y=0, color='black')
-            axs[1].tick_params(axis='y', colors='green')
+        self.canvas_sequence.draw()
 
-            axs[2].plot(t, y2,    color='blue')
-            axs[2].set_ylabel('GY')
-            axs[2].xaxis.set_visible(False)
-            axs[2].set_frame_on(False)
-            axs[2].axhline(y=0, color='black')
-            axs[2].tick_params(axis='y', colors='blue')
+    # def plot(self):
+    #     try:
+    #         self.figure_sequence.clear()
+    #         t = np.linspace(0, 50, 1000)
+    #         y1 = np.sinc(t)
+    #         y2 = np.where(np.sin(t) > 0, 1, -1)
+    #         y3 = np.sin(t)
 
-            axs[3].plot(t, y2, color='black')
-            axs[3].set_ylabel('GZ')
-            axs[3].xaxis.set_visible(False)
-            axs[3].set_frame_on(False)
-            axs[3].axhline(y=0, color='black')
-            axs[3].tick_params(axis='y', colors='brown')
+    #         axs = self.figure_sequence.subplots(5, sharex=True)
+    #         self.figure_sequence.suptitle('Sequence')
 
-            axs[4].plot(t, y3)
-            axs[4].set_ylabel('Read Out')
-            axs[4].set_frame_on(False)
-            axs[4].axhline(y=0, color='black')
-            
+    #         axs[0].plot(t, y1 , color='red')
+    #         axs[0].set_ylabel('RF')
+    #         axs[0].set_frame_on(False)
+    #         axs[0].xaxis.set_visible(False)
+    #         axs[0].axhline(y=0, color='black')
+    #         axs[0].tick_params(axis='y', colors= 'red')
 
-            self.canvas_sequence.draw()
-        except Exception as e:
-            print(e)
+    #         axs[1].plot(t, y2, color='green')
+    #         axs[1].set_ylabel('GX')
+    #         axs[1].set_frame_on(False)
+    #         axs[1].xaxis.set_visible(False)
+    #         axs[1].axhline(y=0, color='black')
+    #         axs[1].tick_params(axis='y', colors='green')
+
+    #         axs[2].plot(t, y2,    color='blue')
+    #         axs[2].set_ylabel('GY')
+    #         axs[2].xaxis.set_visible(False)
+    #         axs[2].set_frame_on(False)
+    #         axs[2].axhline(y=0, color='black')
+    #         axs[2].tick_params(axis='y', colors='blue')
+
+    #         axs[3].plot(t, y2, color='black')
+    #         axs[3].set_ylabel('GZ')
+    #         axs[3].xaxis.set_visible(False)
+    #         axs[3].set_frame_on(False)
+    #         axs[3].axhline(y=0, color='black')
+    #         axs[3].tick_params(axis='y', colors='brown')
+
+    #         axs[4].plot(t, y3)
+    #         axs[4].set_ylabel('Read Out')
+    #         axs[4].set_frame_on(False)
+    #         axs[4].axhline(y=0, color='black')
+
+    #         self.canvas_sequence.draw()
+    #     except Exception as e:
+    #         print(e)
 
     # combobox function  for selecting image property
+
     def combobox_select_property(self, index):
         try:
             if index == 0:
