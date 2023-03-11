@@ -197,7 +197,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.RF_amplitude = dictionary["RF_amplitude"] * \
                     abs(np.sinc(self.RF_duration))
                 axs[0].plot(self.RF_duration, self.RF_amplitude, color='red')
-                axs[0].set_ylabel('RF')
+                axs[0].set_ylabel('RF', fontsize=14,
+                                  fontweight='bold', rotation=0, labelpad=20)
                 axs[0].set_frame_on(False)
                 axs[0].xaxis.set_visible(False)
                 axs[0].axhline(y=0, color='black')
@@ -208,7 +209,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.Gx_amplitude = dictionary["Gx_amplitude"] * \
                     np.where(self.Gx_duration < dictionary["Gx_Time"],  1, 0)
                 axs[1].plot(self.Gx_duration, self.Gx_amplitude, color='green')
-                axs[1].set_ylabel('Gx')
+                axs[1].set_ylabel('Gx', fontsize=14,
+                                  fontweight='bold', rotation=0, labelpad=20)
                 axs[1].set_frame_on(False)
                 axs[1].xaxis.set_visible(False)
                 axs[1].axhline(y=0, color='black')
@@ -220,7 +222,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.Gy_amplitude = dictionary["Gy_amplitude"] * np.where(
                     self.Gy_duration > dictionary["Gy_Time"],  1, 0)
                 axs[2].plot(self.Gy_duration, self.Gy_amplitude, color='blue')
-                axs[2].set_ylabel('Gy')
+                axs[2].set_ylabel('Gy', fontsize=14,
+                                  fontweight='bold', rotation=0, labelpad=20)
                 axs[2].set_frame_on(False)
                 axs[2].xaxis.set_visible(False)
                 axs[2].axhline(y=0, color='black')
@@ -231,7 +234,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     len(self.RF_duration), dictionary['Readout_Time'], 100)
                 self.RO_amplitude = abs(np.sinc(self.RO_duration))
                 axs[3].plot(self.RO_duration, self.RO_amplitude, color='brown')
-                axs[3].set_ylabel('RO')
+                axs[3].set_ylabel('RO', fontsize=14,
+                                  fontweight='bold', rotation=0, labelpad=10)
                 axs[3].set_frame_on(False)
                 axs[3].xaxis.set_visible(True)
                 axs[3].axhline(y=0, color='black')
