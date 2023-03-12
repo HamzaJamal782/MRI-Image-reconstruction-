@@ -28,9 +28,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         QApplication.processEvents()
 
         # initializing variables
-        # self.image = np.zeros((256, 256), dtype=np.uint8)
-        self.image = 0
         self.count = 0
+        self.image = np.zeros((16, 16), dtype=np.uint8)
+        
 
         # for plot sequence
         self.figure_sequence = plt.figure()
@@ -75,10 +75,22 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     # create a function to get the pixel value of the image
 
+   
+
+    def browse(self):
+        try:
+            loadImg = QFileDialog.getOpenFileName(self, 'Open file')
+            self.image = cv2.imread(loadImg[0], 0)
+            self.rgbImage = cv2.cvtColor(self.image, cv2.COLOR_GRAY2RGB)
+            self.rgbImage = qimage2ndarray.array2qimage(self.image) # convert numpy array to qimage
+            self.ui.label_view_img.setPixmap(QPixmap(self.rgbImage))   
+        except Exception as e:
+            print(e)
+
     def getPixel(self, event):
         try:
             # get image from combobox function and convert it to numpy array to get pixel value
-            self.orgImg = qimage2ndarray.rgb_view(self.rgbImage)
+            self.orgImg = qimage2ndarray.rgb_view(self.rgbImage)   # convert qimage to numpy arraysd
             self.imgT1 = qimage2ndarray.rgb_view(self.t1(self.rgbImage))
             self.imgT2 = qimage2ndarray.rgb_view(self.t2(self.rgbImage))
             self.imgSD = qimage2ndarray.rgb_view(self.SD(self.rgbImage))
@@ -86,31 +98,21 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             currentWidth = self.ui.label_view_img.width()
             currentHeight = self.ui.label_view_img.height()
 
-            x = int(((event.pos().x())*10) / currentWidth)
-            y = int(((event.pos().y())*10) / currentHeight)
+            x = int(((event.pos().x())*self.row) / currentWidth)
+            y = int(((event.pos().y())*self.row) / currentHeight)
 
             self.ui.lineEdit_t1.setText(str(self.imgT1[x, y][1]))
             self.ui.lineEdit_t2.setText(str(self.imgT2[x, y][1]))
             self.ui.lineEdit_sd.setText(str(self.imgSD[x, y][1]))
         except Exception as e:
             print(e)
-
-    def browse(self):
-        try:
-            loadImg = QFileDialog.getOpenFileName(self, 'Open file')
-            self.image = cv2.imread(loadImg[0], 0)
-            self.rgbImage = cv2.cvtColor(self.image, cv2.COLOR_GRAY2RGB)
-            self.rgbImage = qimage2ndarray.array2qimage(self.image)
-            self.ui.label_view_img.setPixmap(QPixmap(self.rgbImage))
-        except Exception as e:
-            print(e)
-
+            print(type(self.imgT1))
 # function to choose size of image from combobox_size
 
     def change_size_combo(self, flag):
         try:
-            input_img = np.zeros((16, 16), dtype=np.uint8)
-            input_imge = np.zeros((16, 16), dtype=np.uint8)
+            resized_img = np.zeros((16, 16), dtype=np.uint8)
+            resized_imge = np.zeros((16, 16), dtype=np.uint8)
             size_map = {
                 "16x16": (16, 16),
                 "32x32": (32, 32),
@@ -122,18 +124,18 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             }
             size_str = self.ui.comboBox_size.currentText()
             if size_str in size_map:
-                input_img = qimage2ndarray.rgb_view(self.rgbImage)
-                input_img = cv2.resize(input_img, size_map[size_str])
-                input_imge = qimage2ndarray.array2qimage(input_img)
+                resized_img = qimage2ndarray.rgb_view(self.rgbImage)
+                resized_img = cv2.resize(resized_img, size_map[size_str])
+                resized_imge = qimage2ndarray.array2qimage(resized_img)
                 self.ui.label_view_img.setPixmap(
-                    QPixmap(input_imge))
+                    QPixmap(resized_imge))
 
             if flag == 0:
-                return input_img.shape[0]
+                return resized_img.shape[0]
             if flag == 1:
-                return input_img.shape[1]
+                return resized_img.shape[1]
             else:
-                return input_imge
+                return resized_imge
 
         except Exception as e:
             print(e)
@@ -251,11 +253,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     # combobox function  for selecting image property
     def combobox_select_property(self, index):
         try:
-            img_copy = self.rgbImage.copy()
+            # img_copy = self.rgbImage.copy()
+            img_copy = self.change_size_combo(2)
             rgb_array = qimage2ndarray.rgb_view(img_copy)
             
+            
             if index == 0:
-                self.ui.label_view_img.setPixmap(QPixmap.fromImage(self.rgbImage))
+                self.ui.label_view_img.setPixmap(QPixmap.fromImage(rgb_array))
             elif index == 1:
                 t1_img = self.t1(rgb_array)
                 self.ui.label_view_img.setPixmap(QPixmap.fromImage(t1_img))
@@ -265,8 +269,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             elif index == 3:
                 sd_img = self.SD(rgb_array)
                 self.ui.label_view_img.setPixmap(QPixmap.fromImage(sd_img))
-            else:
-                pass
+            
         except Exception as e:
             print(e)
     
