@@ -63,6 +63,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ui.label_view_img.mousePressEvent = self.getPixel
         self.ui.comboBox_size.currentIndexChanged.connect(
             self.change_size_combo)
+        self.ui.pushButton_Run.clicked.connect(self.RF)
 
         # set default value of combobox_size to empty
         self.ui.comboBox_size.setCurrentIndex(-1)
@@ -98,18 +99,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         try:
             loadImg = QFileDialog.getOpenFileName(self, 'Open file')
             self.image = cv2.imread(loadImg[0], 0)
-            # self.image = cv2.resize(self.image, (int(self.row), int(self.col)))
             self.rgbImage = cv2.cvtColor(self.image, cv2.COLOR_GRAY2RGB)
-            # self.rgbImage = cv2.resize(
-            #     self.image, (int(self.row), int(self.col)))
-            # self.image_orignal = qimage2ndarray.array2qimage(self.image)
             self.rgbImage = qimage2ndarray.array2qimage(self.image)
-            # self.image_orignal = self.image_orignal.scaled(
-            #     int(self.row), int(self.col))
             self.ui.label_view_img.setPixmap(QPixmap(self.rgbImage))
-            # plt.imshow(self.image, cmap='gray')
-
-            # self.RF()
         except Exception as e:
             print(e)
 
@@ -117,8 +109,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def change_size_combo(self, flag):
         try:
-            input_img = np.zeros((256, 256), dtype=np.uint8)
-            input_imge = np.zeros((256, 256), dtype=np.uint8)
+            input_img = np.zeros((16, 16), dtype=np.uint8)
+            input_imge = np.zeros((16, 16), dtype=np.uint8)
             size_map = {
                 "16x16": (16, 16),
                 "32x32": (32, 32),
@@ -126,13 +118,14 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 "128x128": (128, 128),
                 "256x256": (256, 256),
                 "512x512": (512, 512),
+
             }
             size_str = self.ui.comboBox_size.currentText()
             if size_str in size_map:
                 input_img = qimage2ndarray.rgb_view(self.rgbImage)
                 input_img = cv2.resize(input_img, size_map[size_str])
                 input_imge = qimage2ndarray.array2qimage(input_img)
-                input_imge = self.ui.label_view_img.setPixmap(
+                self.ui.label_view_img.setPixmap(
                     QPixmap(input_imge))
 
             if flag == 0:
@@ -256,25 +249,27 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.canvas_sequence.draw()
 
     # combobox function  for selecting image property
-
     def combobox_select_property(self, index):
         try:
+            img_copy = self.rgbImage.copy()
+            rgb_array = qimage2ndarray.rgb_view(img_copy)
+            
             if index == 0:
-                self.ui.label_view_img.setPixmap(QPixmap(self.rgbImage))
+                self.ui.label_view_img.setPixmap(QPixmap.fromImage(self.rgbImage))
             elif index == 1:
-                self.ui.label_view_img.setPixmap(
-                    QPixmap(self.t1(self.rgbImage)))
+                t1_img = self.t1(rgb_array)
+                self.ui.label_view_img.setPixmap(QPixmap.fromImage(t1_img))
             elif index == 2:
-                self.ui.label_view_img.setPixmap(
-                    QPixmap(self.t2(self.rgbImage)))
+                t2_img = self.t2(rgb_array)
+                self.ui.label_view_img.setPixmap(QPixmap.fromImage(t2_img))
             elif index == 3:
-                self.ui.label_view_img.setPixmap(
-                    QPixmap(self.SD(self.rgbImage)))
+                sd_img = self.SD(rgb_array)
+                self.ui.label_view_img.setPixmap(QPixmap.fromImage(sd_img))
             else:
                 pass
         except Exception as e:
             print(e)
-
+    
     # map range function from brain tissue properties to image pixel values
     def map_range(self, input_value):
         try:
@@ -286,8 +281,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def t1(self, in_image):
         try:
-            # in_image = cv2.resize(in_image, self.img_size)
-            # print('size of t1:' + str(in_image.shape))
             # Define the conditionals and corresponding values
             conditions = [
                 in_image == 255,  # white matter
@@ -310,8 +303,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def t2(self, in_image):
         try:
-            in_image = cv2.resize(in_image, self.img_size)
-            print('size of t2:' + str(in_image.shape))
 
             # Define the conditionals and corresponding values
             conditions = [
@@ -337,8 +328,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def SD(self, in_image):
         try:
-            in_image = cv2.resize(in_image, self.img_size)
-            print('size of SD:' + str(in_image.shape))
 
             # Define the conditionals and corresponding values
             conditions = [
