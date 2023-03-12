@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import *
-from PyQt5.QtWidgets import QFileDialog, QApplication
+from PyQt5.QtWidgets import QFileDialog,QApplication,QMessageBox
 from PyQt5.QtGui import QPixmap, QPainter, QColor, QImage
 from gui import Ui_MainWindow
 import sys
@@ -18,7 +18,7 @@ from matplotlib.figure import Figure
 import pandas as pd
 import matplotlib.patches as patches
 import json
-
+import cmath
 
 class ApplicationWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -27,10 +27,15 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ui.setupUi(self)
         QApplication.processEvents()
 
+        #error message
+        self.msg = QMessageBox()
+        self.msg.setWindowTitle("Warning")
+        self.msg.setIcon(QMessageBox.Critical)
+
         # initializing variables
+        # self.image = np.zeros((16, 16), dtype=np.uint8)
         self.count = 0
-        self.image = np.zeros((16, 16), dtype=np.uint8)
-        
+        self.flag = 0
 
         # for plot sequence
         self.figure_sequence = plt.figure()
@@ -53,92 +58,94 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         # adding items to combobox size
         self.ui.comboBox_size.addItems(
-            ["16x16", "32x32", "64x64", "128x128", "256x256", "512x512"])
-
-        # connect ui elements to functions
-        self.ui.pushButton_Browse.clicked.connect(self.browse)
-        self.ui.pushButton_Plot.clicked.connect(self.upload)
-        self.ui.comboBox_property.currentIndexChanged.connect(
-            self.combobox_select_property)
-        self.ui.label_view_img.mousePressEvent = self.getPixel
-        self.ui.comboBox_size.currentIndexChanged.connect(
-            self.change_size_combo)
-        self.ui.pushButton_Run.clicked.connect(self.RF)
-
+            ["16x16", "32x32", "64x64", "128x128", "256x256"])
+        
         # set default value of combobox_size to empty
         self.ui.comboBox_size.setCurrentIndex(-1)
 
-        # set value of row, col and image from size selected from combobox_size
-        self.row = str(self.change_size_combo(0))
-        self.col = str(self.change_size_combo(0))
-        self.img_size = str(self.change_size_combo(1))
+        # connect ui elements to functions
+        self.ui.pushButton_Browse.clicked.connect(self.browse)
+        self.ui.pushButton_Plot.clicked.connect(self.plot)
+        self.ui.pushButton_Run.clicked.connect(self.RF)
+        self.ui.comboBox_property.currentIndexChanged.connect(
+            self.combobox_select_property)
+        self.ui.label_view_img.mousePressEvent = self.getPixel
+        self.ui.comboBox_size.currentIndexChanged.connect(self.change_size_combo)
 
-    # create a function to get the pixel value of the image
+        
 
-   
+        # set value of row and col from size selected from combobox_size
+        # self.row = str(self.change_size_combo(0))
+        # self.col = str(self.change_size_combo(0))
 
-    def browse(self):
+    # function to choose size of image from combobox_size
+
+    def change_size_combo(self):
         try:
-            loadImg = QFileDialog.getOpenFileName(self, 'Open file')
-            self.image = cv2.imread(loadImg[0], 0)
-            self.rgbImage = cv2.cvtColor(self.image, cv2.COLOR_GRAY2RGB)
-            self.rgbImage = qimage2ndarray.array2qimage(self.image) # convert numpy array to qimage
-            self.ui.label_view_img.setPixmap(QPixmap(self.rgbImage))   
+            size_map = {
+                "16x16": 16,
+                "32x32": 32,
+                "64x64": 64,
+                "128x128": 128,
+                "256x256": 256
+            }
+            size_str = self.ui.comboBox_size.currentText()
+            
+            self.row = size_map[size_str]
+            self.col = size_map[size_str]
+            print(self.flag)
+            if self.flag == 1:
+                self.plot_phantom()
+
         except Exception as e:
             print(e)
 
+    # create a function to get the pixel value of the image
     def getPixel(self, event):
         try:
             # get image from combobox function and convert it to numpy array to get pixel value
-            self.orgImg = qimage2ndarray.rgb_view(self.rgbImage)   # convert qimage to numpy arraysd
-            self.imgT1 = qimage2ndarray.rgb_view(self.t1(self.rgbImage))
-            self.imgT2 = qimage2ndarray.rgb_view(self.t2(self.rgbImage))
-            self.imgSD = qimage2ndarray.rgb_view(self.SD(self.rgbImage))
+            self.orgImg = qimage2ndarray.rgb_view(self.image_orignal)
+            self.imgT1 = qimage2ndarray.rgb_view(self.t1(self.image))
+            self.imgT2 = qimage2ndarray.rgb_view(self.t2(self.image))
+            self.imgSD = qimage2ndarray.rgb_view(self.SD(self.image))
 
             currentWidth = self.ui.label_view_img.width()
             currentHeight = self.ui.label_view_img.height()
 
-            x = int(((event.pos().x())*self.row) / currentWidth)
-            y = int(((event.pos().y())*self.row) / currentHeight)
+            x = int(((event.pos().x())*10) / currentWidth)
+            y = int(((event.pos().y())*10) / currentHeight)
 
             self.ui.lineEdit_t1.setText(str(self.imgT1[x, y][1]))
             self.ui.lineEdit_t2.setText(str(self.imgT2[x, y][1]))
             self.ui.lineEdit_sd.setText(str(self.imgSD[x, y][1]))
         except Exception as e:
             print(e)
-            print(type(self.imgT1))
-# function to choose size of image from combobox_size
 
-    def change_size_combo(self, flag):
+    def browse(self):
         try:
-            resized_img = np.zeros((16, 16), dtype=np.uint8)
-            resized_imge = np.zeros((16, 16), dtype=np.uint8)
-            size_map = {
-                "16x16": (16, 16),
-                "32x32": (32, 32),
-                "64x64": (64, 64),
-                "128x128": (128, 128),
-                "256x256": (256, 256),
-                "512x512": (512, 512),
-
-            }
-            size_str = self.ui.comboBox_size.currentText()
-            if size_str in size_map:
-                resized_img = qimage2ndarray.rgb_view(self.rgbImage)
-                resized_img = cv2.resize(resized_img, size_map[size_str])
-                resized_imge = qimage2ndarray.array2qimage(resized_img)
-                self.ui.label_view_img.setPixmap(
-                    QPixmap(resized_imge))
-
-            if flag == 0:
-                return resized_img.shape[0]
-            if flag == 1:
-                return resized_img.shape[1]
+            if self.ui.comboBox_size.currentIndex() == -1:
+                self.msg.setText("Please choose a size first!")
+                self.msg.exec_()
             else:
-                return resized_imge
+                self.flag = 1
+                self.loadImg = QFileDialog.getOpenFileName(self, 'Open file')
+                self.plot_phantom()
 
+                # self.RF()
         except Exception as e:
             print(e)
+
+    def plot_phantom(self):
+        self.image = cv2.imread(self.loadImg[0], 0)
+        self.image = cv2.resize(self.image, (int(self.row), int(self.col)))
+        print("111")
+        print(self.image.shape)
+        self.rgbImage = cv2.cvtColor(self.image, cv2.COLOR_GRAY2RGB)
+        # self.rgbImage = cv2.resize(self.image, (int(self.row), int(self.col)))
+        self.image_orignal = qimage2ndarray.array2qimage(self.image)
+        # self.image_orignal = self.image_orignal.scaled(int(self.row), int(self.col))
+        self.ui.label_view_img.setPixmap(QPixmap(self.image_orignal))
+        plt.imshow(self.image, cmap='gray')
 
     def Rx(self, theta):
         return np.matrix([[1, 0, 0],
@@ -158,8 +165,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def RF(self):
         self.M = [[0 for i in np.arange(int(self.row))]
                   for j in np.arange(int(self.col))]
-        self.k_space = [[0 for i in np.arange(
-            int(self.row))] for j in np.arange(int(self.col))]
+        self.M1 = [[0 for i in np.arange(int(self.row))]
+                  for j in np.arange(int(self.col))]
+        self.M2 = [[0 for i in np.arange(int(self.row))]
+                  for j in np.arange(int(self.col))]
+        self.k_space = [[0 for i in np.arange(int(self.row))] for j in np.arange(int(self.col))]
+        self.fourier = [[0 for i in np.arange(int(self.row))] for j in np.arange(int(self.col))]
         for i in range(int(self.row)):
             for j in range(int(self.col)):
                 self.M[i][j] = np.ravel(
@@ -173,7 +184,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.i1 = self.i1 + 1
             for i in np.arange(int(self.row)):
                 for j in np.arange(int(self.col)):
-                    self.M[i][j] = np.ravel(
+                    self.M1[i][j] = np.ravel(
                         np.dot(self.M[i][j], self.Rz(m.radians(phaseAngle))))  # M1
 
             self.freqGradient()
@@ -185,94 +196,104 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             PixelSummation = [0, 0, 0]
             for i in np.arange(int(self.row)):
                 for j in np.arange(int(self.col)):
-                    self.M[i][j] = np.ravel(
-                        np.dot(self.M[i][j], self.Rz(m.radians(freqAngle))))
-                    PixelSummation = PixelSummation + self.M[i][j]
-
+                    self.M2[i][j] = np.ravel(np.dot(self.M1[i][j],self.Rz(m.radians(freqAngle))))   #M
+                    PixelSummation = PixelSummation + self.M2[i][j]
+                    # PixelSummation = PixelSummation + self.M[i][j]
+            
+            # print(type(PixelSummation))
+            # self.ui.lineEdit_t1.setText(str(PixelSummation))
+            # time.sleep(1)
+            # self.canvas_kspace = PixelSummation[0]
+            # self.canvas_kspace.draw()
             self.k_space[self.i1][self.i2] = PixelSummation
+            self.fourier[self.i1][self.i2] = complex(PixelSummation[0] , PixelSummation[1])
+            print(self.fourier[self.i1][self.i2])
+            self.canvas_kspace = self.fourier
+            self.canvas_kspace.draw()
+
+
+        
+
         # print(self.k_space)
+    # def generat_fourier(self):
+    #     self.fourier = [[0 for i in np.arange(int(self.row))] for j in np.arange(int(self.col))]
+    #     for ii in self.k_space:
+    #         ii[0]
+    #         ii[1]
 
     def upload(self):
-        self.figure_sequence.clear()
-        self.data = json.load(open("data.json", "r"))
-        axs = self.figure_sequence.subplots(4, sharex=True)
-        self.figure_sequence.suptitle('Sequence')
+        f = open("../Image-reconstruction--main/data.json", "r")
+        self.data = json.load(f)
+        for i in self.data:
+            print(i)
 
-        for dictionary in self.data:
-            if dictionary['name'] == "RF_Pulse":
-                self.RF_duration = np.linspace(0, dictionary['RF_Time'], 100)
-                self.RF_amplitude = dictionary["RF_amplitude"] * \
-                    abs(np.sinc(self.RF_duration))
-                axs[0].plot(self.RF_duration, self.RF_amplitude, color='red')
-                axs[0].set_ylabel('RF', fontsize=14,
-                                  fontweight='bold', rotation=0, labelpad=20)
-                axs[0].set_frame_on(False)
-                axs[0].xaxis.set_visible(False)
-                axs[0].axhline(y=0, color='black')
-                axs[0].tick_params(axis='y', colors='red')
+        self.plot()
 
-            if dictionary['name'] == "Gx_pulse":
-                self.Gx_duration = np.linspace(0, dictionary['Gx_Time'], 100)
-                self.Gx_amplitude = dictionary["Gx_amplitude"] * \
-                    np.where(self.Gx_duration < dictionary["Gx_Time"],  1, 0)
-                axs[1].plot(self.Gx_duration, self.Gx_amplitude, color='green')
-                axs[1].set_ylabel('Gx', fontsize=14,
-                                  fontweight='bold', rotation=0, labelpad=20)
-                axs[1].set_frame_on(False)
-                axs[1].xaxis.set_visible(False)
-                axs[1].axhline(y=0, color='black')
-                axs[1].tick_params(axis='y', colors='green')
+    def plot(self):
+        try:
+            self.figure_sequence.clear()
+            t = np.linspace(0, 50, 1000)
+            y1 = np.sinc(t)
+            y2 = np.where(np.sin(t) > 0, 1, -1)
+            y3 = np.sin(t)
 
-            if dictionary['name'] == "Gy_Pulse":
-                self.Gy_duration = np.linspace(
-                    len(self.RF_duration), dictionary['Gy_Time'], 100)
-                self.Gy_amplitude = dictionary["Gy_amplitude"] * np.where(
-                    self.Gy_duration > dictionary["Gy_Time"],  1, 0)
-                axs[2].plot(self.Gy_duration, self.Gy_amplitude, color='blue')
-                axs[2].set_ylabel('Gy', fontsize=14,
-                                  fontweight='bold', rotation=0, labelpad=20)
-                axs[2].set_frame_on(False)
-                axs[2].xaxis.set_visible(False)
-                axs[2].axhline(y=0, color='black')
-                axs[2].tick_params(axis='y', colors='blue')
+            axs = self.figure_sequence.subplots(5)
+            self.figure_sequence.suptitle('Sequence')
 
-            if dictionary['name'] == "Readout":
-                self.RO_duration = np.linspace(
-                    len(self.RF_duration), dictionary['Readout_Time'], 100)
-                self.RO_amplitude = abs(np.sinc(self.RO_duration))
-                axs[3].plot(self.RO_duration, self.RO_amplitude, color='brown')
-                axs[3].set_ylabel('RO', fontsize=14,
-                                  fontweight='bold', rotation=0, labelpad=10)
-                axs[3].set_frame_on(False)
-                axs[3].xaxis.set_visible(True)
-                axs[3].axhline(y=0, color='black')
-                axs[3].tick_params(axis='y', colors='brown')
+            axs[0].plot(t, y1 , color='red')
+            axs[0].set_ylabel('RF')
+            axs[0].set_frame_on(False)
+            axs[0].xaxis.set_visible(False)
+            axs[0].axhline(y=0, color='black')
+            axs[0].tick_params(axis='y', colors= 'red')
 
-        self.canvas_sequence.draw()
+            axs[1].plot(t, y2, color='green')
+            axs[1].set_ylabel('GX')
+            axs[1].set_frame_on(False)
+            axs[1].xaxis.set_visible(False)
+            axs[1].axhline(y=0, color='black')
+            axs[1].tick_params(axis='y', colors='green')
+
+            axs[2].plot(t, y2,    color='blue')
+            axs[2].set_ylabel('GY')
+            axs[2].xaxis.set_visible(False)
+            axs[2].set_frame_on(False)
+            axs[2].axhline(y=0, color='black')
+            axs[2].tick_params(axis='y', colors='blue')
+
+            axs[3].plot(t, y2, color='black')
+            axs[3].set_ylabel('GZ')
+            axs[3].xaxis.set_visible(False)
+            axs[3].set_frame_on(False)
+            axs[3].axhline(y=0, color='black')
+            axs[3].tick_params(axis='y', colors='brown')
+
+            axs[4].plot(t, y3)
+            axs[4].set_ylabel('Read Out')
+            axs[4].set_frame_on(False)
+            axs[4].axhline(y=0, color='black')
+            
+
+            self.canvas_sequence.draw()
+        except Exception as e:
+            print(e)
 
     # combobox function  for selecting image property
     def combobox_select_property(self, index):
         try:
-            # img_copy = self.rgbImage.copy()
-            img_copy = self.change_size_combo(2)
-            rgb_array = qimage2ndarray.rgb_view(img_copy)
-            
-            
             if index == 0:
-                self.ui.label_view_img.setPixmap(QPixmap.fromImage(rgb_array))
+                self.ui.label_view_img.setPixmap(QPixmap(self.image_orignal))
             elif index == 1:
-                t1_img = self.t1(rgb_array)
-                self.ui.label_view_img.setPixmap(QPixmap.fromImage(t1_img))
+                self.ui.label_view_img.setPixmap(QPixmap(self.t1(self.image)))
             elif index == 2:
-                t2_img = self.t2(rgb_array)
-                self.ui.label_view_img.setPixmap(QPixmap.fromImage(t2_img))
+                self.ui.label_view_img.setPixmap(QPixmap(self.t2(self.image)))
             elif index == 3:
-                sd_img = self.SD(rgb_array)
-                self.ui.label_view_img.setPixmap(QPixmap.fromImage(sd_img))
-            
+                self.ui.label_view_img.setPixmap(QPixmap(self.SD(self.image)))
+            else:
+                pass
         except Exception as e:
             print(e)
-    
+
     # map range function from brain tissue properties to image pixel values
     def map_range(self, input_value):
         try:
@@ -284,6 +305,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def t1(self, in_image):
         try:
+            in_image = cv2.resize(in_image, (self.row,self.col))
             # Define the conditionals and corresponding values
             conditions = [
                 in_image == 255,  # white matter
@@ -297,6 +319,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             # Apply the conditionals and assign values in a single step
             shepp_t1 = np.select(conditions, values,
                                  default=255).astype(np.uint8)
+            # print(shepp_t1)
 
             # Convert image to qimage
             shepp_t1 = qimage2ndarray.array2qimage(shepp_t1)
@@ -306,7 +329,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def t2(self, in_image):
         try:
-
+            in_image = cv2.resize(in_image, (self.row,self.col))
             # Define the conditionals and corresponding values
             conditions = [
                 in_image == 255,  # white matter
@@ -331,7 +354,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def SD(self, in_image):
         try:
-
+            in_image = cv2.resize(in_image, (self.row,self.col))
             # Define the conditionals and corresponding values
             conditions = [
                 in_image == 255,  # white matter
