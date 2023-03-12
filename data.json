@@ -8,10 +8,10 @@
     "Gx_amplitude": 5
 }, {
     "name": "Gy_Pulse",
-    "Gy_Time":5,
+    "Gy_Time":10,
     "Gy_amplitude": 5
 }, {
     "name":"Readout",
-    "Readout_Time":5
+    "Readout_Time":0
 }
 ]

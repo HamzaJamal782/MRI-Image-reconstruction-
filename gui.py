@@ -15,6 +15,9 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 859)
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(".\\SheppLogan_Phantom256.jpg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        MainWindow.setWindowIcon(icon)
         MainWindow.setStyleSheet("\n"
 "\n"
 "/*-----QWidget-----*/\n"
@@ -455,7 +458,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Image Reconstruction"))
         self.pushButton_Browse.setText(_translate("MainWindow", "Browse"))
         self.label_7.setText(_translate("MainWindow", "choose size of image"))
         self.label.setText(_translate("MainWindow", "choose property"))

@@ -28,7 +28,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         QApplication.processEvents()
 
         # initializing variables
-        self.image = np.zeros((16, 16), dtype=np.uint8)
+        # self.image = np.zeros((256, 256), dtype=np.uint8)
+        self.image = 0
         self.count = 0
 
         # for plot sequence
@@ -52,7 +53,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         # adding items to combobox size
         self.ui.comboBox_size.addItems(
-            ["16x16", "32x32", "64x64", "128x128", "256x256"])
+            ["16x16", "32x32", "64x64", "128x128", "256x256", "512x512"])
 
         # connect ui elements to functions
         self.ui.pushButton_Browse.clicked.connect(self.browse)
@@ -66,41 +67,20 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         # set default value of combobox_size to empty
         self.ui.comboBox_size.setCurrentIndex(-1)
 
-        # set value of row and col from size selected from combobox_size
+        # set value of row, col and image from size selected from combobox_size
         self.row = str(self.change_size_combo(0))
         self.col = str(self.change_size_combo(0))
-
-    # function to choose size of image from combobox_size
-
-    def change_size_combo(self, flag):
-        try:
-            size_map = {
-                "16x16": (16, 16),
-                "32x32": (32, 32),
-                "64x64": (64, 64),
-                "128x128": (128, 128),
-                "256x256": (256, 256)
-            }
-            size_str = self.ui.comboBox_size.currentText()
-            if size_str in size_map:
-                self.image = cv2.resize(self.image, size_map[size_str])
-
-            if flag == 0:
-                return self.image.shape[0]
-            else:
-                return self.image.shape[:2]
-
-        except Exception as e:
-            print(e)
+        self.img_size = str(self.change_size_combo(1))
 
     # create a function to get the pixel value of the image
+
     def getPixel(self, event):
         try:
             # get image from combobox function and convert it to numpy array to get pixel value
-            self.orgImg = qimage2ndarray.rgb_view(self.image_orignal)
-            self.imgT1 = qimage2ndarray.rgb_view(self.t1(self.image))
-            self.imgT2 = qimage2ndarray.rgb_view(self.t2(self.image))
-            self.imgSD = qimage2ndarray.rgb_view(self.SD(self.image))
+            self.orgImg = qimage2ndarray.rgb_view(self.rgbImage)
+            self.imgT1 = qimage2ndarray.rgb_view(self.t1(self.rgbImage))
+            self.imgT2 = qimage2ndarray.rgb_view(self.t2(self.rgbImage))
+            self.imgSD = qimage2ndarray.rgb_view(self.SD(self.rgbImage))
 
             currentWidth = self.ui.label_view_img.width()
             currentHeight = self.ui.label_view_img.height()
@@ -118,18 +98,50 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         try:
             loadImg = QFileDialog.getOpenFileName(self, 'Open file')
             self.image = cv2.imread(loadImg[0], 0)
-            self.image = cv2.resize(self.image, (int(self.row), int(self.col)))
-            print(self.image.shape)
+            # self.image = cv2.resize(self.image, (int(self.row), int(self.col)))
             self.rgbImage = cv2.cvtColor(self.image, cv2.COLOR_GRAY2RGB)
-            self.rgbImage = cv2.resize(
-                self.image, (int(self.row), int(self.col)))
-            self.image_orignal = qimage2ndarray.array2qimage(self.image)
-            self.image_orignal = self.image_orignal.scaled(
-                int(self.row), int(self.col))
-            self.ui.label_view_img.setPixmap(QPixmap(self.image_orignal))
-            plt.imshow(self.image, cmap='gray')
+            # self.rgbImage = cv2.resize(
+            #     self.image, (int(self.row), int(self.col)))
+            # self.image_orignal = qimage2ndarray.array2qimage(self.image)
+            self.rgbImage = qimage2ndarray.array2qimage(self.image)
+            # self.image_orignal = self.image_orignal.scaled(
+            #     int(self.row), int(self.col))
+            self.ui.label_view_img.setPixmap(QPixmap(self.rgbImage))
+            # plt.imshow(self.image, cmap='gray')
 
             # self.RF()
+        except Exception as e:
+            print(e)
+
+# function to choose size of image from combobox_size
+
+    def change_size_combo(self, flag):
+        try:
+            input_img = np.zeros((256, 256), dtype=np.uint8)
+            input_imge = np.zeros((256, 256), dtype=np.uint8)
+            size_map = {
+                "16x16": (16, 16),
+                "32x32": (32, 32),
+                "64x64": (64, 64),
+                "128x128": (128, 128),
+                "256x256": (256, 256),
+                "512x512": (512, 512),
+            }
+            size_str = self.ui.comboBox_size.currentText()
+            if size_str in size_map:
+                input_img = qimage2ndarray.rgb_view(self.rgbImage)
+                input_img = cv2.resize(input_img, size_map[size_str])
+                input_imge = qimage2ndarray.array2qimage(input_img)
+                input_imge = self.ui.label_view_img.setPixmap(
+                    QPixmap(input_imge))
+
+            if flag == 0:
+                return input_img.shape[0]
+            if flag == 1:
+                return input_img.shape[1]
+            else:
+                return input_imge
+
         except Exception as e:
             print(e)
 
@@ -243,66 +255,21 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         self.canvas_sequence.draw()
 
-    # def plot(self):
-    #     try:
-    #         self.figure_sequence.clear()
-    #         t = np.linspace(0, 50, 1000)
-    #         y1 = np.sinc(t)
-    #         y2 = np.where(np.sin(t) > 0, 1, -1)
-    #         y3 = np.sin(t)
-
-    #         axs = self.figure_sequence.subplots(5, sharex=True)
-    #         self.figure_sequence.suptitle('Sequence')
-
-    #         axs[0].plot(t, y1 , color='red')
-    #         axs[0].set_ylabel('RF')
-    #         axs[0].set_frame_on(False)
-    #         axs[0].xaxis.set_visible(False)
-    #         axs[0].axhline(y=0, color='black')
-    #         axs[0].tick_params(axis='y', colors= 'red')
-
-    #         axs[1].plot(t, y2, color='green')
-    #         axs[1].set_ylabel('GX')
-    #         axs[1].set_frame_on(False)
-    #         axs[1].xaxis.set_visible(False)
-    #         axs[1].axhline(y=0, color='black')
-    #         axs[1].tick_params(axis='y', colors='green')
-
-    #         axs[2].plot(t, y2,    color='blue')
-    #         axs[2].set_ylabel('GY')
-    #         axs[2].xaxis.set_visible(False)
-    #         axs[2].set_frame_on(False)
-    #         axs[2].axhline(y=0, color='black')
-    #         axs[2].tick_params(axis='y', colors='blue')
-
-    #         axs[3].plot(t, y2, color='black')
-    #         axs[3].set_ylabel('GZ')
-    #         axs[3].xaxis.set_visible(False)
-    #         axs[3].set_frame_on(False)
-    #         axs[3].axhline(y=0, color='black')
-    #         axs[3].tick_params(axis='y', colors='brown')
-
-    #         axs[4].plot(t, y3)
-    #         axs[4].set_ylabel('Read Out')
-    #         axs[4].set_frame_on(False)
-    #         axs[4].axhline(y=0, color='black')
-
-    #         self.canvas_sequence.draw()
-    #     except Exception as e:
-    #         print(e)
-
     # combobox function  for selecting image property
 
     def combobox_select_property(self, index):
         try:
             if index == 0:
-                self.ui.label_view_img.setPixmap(QPixmap(self.image_orignal))
+                self.ui.label_view_img.setPixmap(QPixmap(self.rgbImage))
             elif index == 1:
-                self.ui.label_view_img.setPixmap(QPixmap(self.t1(self.image)))
+                self.ui.label_view_img.setPixmap(
+                    QPixmap(self.t1(self.rgbImage)))
             elif index == 2:
-                self.ui.label_view_img.setPixmap(QPixmap(self.t2(self.image)))
+                self.ui.label_view_img.setPixmap(
+                    QPixmap(self.t2(self.rgbImage)))
             elif index == 3:
-                self.ui.label_view_img.setPixmap(QPixmap(self.SD(self.image)))
+                self.ui.label_view_img.setPixmap(
+                    QPixmap(self.SD(self.rgbImage)))
             else:
                 pass
         except Exception as e:
@@ -319,7 +286,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def t1(self, in_image):
         try:
-            in_image = cv2.resize(in_image, self.change_size_combo(1))
+            # in_image = cv2.resize(in_image, self.img_size)
+            # print('size of t1:' + str(in_image.shape))
             # Define the conditionals and corresponding values
             conditions = [
                 in_image == 255,  # white matter
@@ -333,7 +301,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             # Apply the conditionals and assign values in a single step
             shepp_t1 = np.select(conditions, values,
                                  default=255).astype(np.uint8)
-            # print(shepp_t1)
 
             # Convert image to qimage
             shepp_t1 = qimage2ndarray.array2qimage(shepp_t1)
@@ -343,7 +310,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def t2(self, in_image):
         try:
-            in_image = cv2.resize(in_image, self.change_size_combo(1))
+            in_image = cv2.resize(in_image, self.img_size)
+            print('size of t2:' + str(in_image.shape))
+
             # Define the conditionals and corresponding values
             conditions = [
                 in_image == 255,  # white matter
@@ -368,7 +337,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def SD(self, in_image):
         try:
-            in_image = cv2.resize(in_image, self.change_size_combo(1))
+            in_image = cv2.resize(in_image, self.img_size)
+            print('size of SD:' + str(in_image.shape))
+
             # Define the conditionals and corresponding values
             conditions = [
                 in_image == 255,  # white matter

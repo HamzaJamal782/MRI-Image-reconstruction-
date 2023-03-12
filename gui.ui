@@ -11,7 +11,11 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Image Reconstruction</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>SheppLogan_Phantom256.jpg</normaloff>SheppLogan_Phantom256.jpg</iconset>
   </property>
   <property name="styleSheet">
    <string notr="true">
