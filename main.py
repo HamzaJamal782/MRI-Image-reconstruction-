@@ -19,6 +19,7 @@ import pandas as pd
 import matplotlib.patches as patches
 import json
 import cmath
+from PIL import Image, ImageEnhance
 
 
 class ApplicationWindow(QtWidgets.QMainWindow):
@@ -67,6 +68,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ui.pushButton_Run_Generat_phantom.clicked.connect(
             self.popUpErrorMsg)
         self.ui.slider_contrast.valueChanged.connect(self.adjust_contrast)
+        self.ui.slider_brightness.valueChanged.connect(self.adjusted_brightness)
 
         # set default value of combobox_size to empty
         self.ui.comboBox_size.setCurrentIndex(-1)
@@ -79,22 +81,22 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def browse(self):
         try:
             # check if change size combo is empty
-            if self.ui.comboBox_size.currentText() == "":
-                self.popUpErrorMsg("Please select size of image first")
-            else:
-                loadImg = QFileDialog.getOpenFileName(self, 'Open file')
-                self.image = cv2.imread(loadImg[0], 0)
-                self.rgbImage = cv2.cvtColor(self.image, cv2.COLOR_GRAY2RGB)
-                self.rgbImage = qimage2ndarray.array2qimage(
-                    self.image)  # convert numpy array to qimage
-                self.rgbImage = self.rgbImage.scaled(self.change_size_combo(1))
-                self.ui.label_view_img.setPixmap(QPixmap(self.rgbImage))
+            # if self.ui.comboBox_size.currentText() == "":
+                # self.popUpErrorMsg("Please select size of image first")
+            # else:
+            loadImg = QFileDialog.getOpenFileName(self, 'Open file')
+            self.image = cv2.imread(loadImg[0], 0)
+            self.rgbImage = cv2.cvtColor(self.image, cv2.COLOR_GRAY2RGB)
+            self.rgbImage = qimage2ndarray.array2qimage(
+                self.image)  # convert numpy array to qimage
+            # self.rgbImage = self.rgbImage.scaled(self.change_size_combo(0), self.change_size_combo(1))
+            self.rgbImage = self.rgbImage.scaled(720 , 576)
+            self.ui.label_view_img.setPixmap(QPixmap(self.rgbImage))
         except Exception as e:
             print(e)
 
-    
-
     # function to choose size of image from combobox_size
+
     def change_size_combo(self, flag):
         try:
             resized_imge = None
@@ -105,6 +107,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 "128x128": (128, 128),
                 "256x256": (256, 256),
                 "512x512": (512, 512),
+                "1024x1024": (1024, 1024),
 
             }
             size_str = self.ui.comboBox_size.currentText()
@@ -241,42 +244,64 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
             if index == 0:
                 self.ui.label_view_img.setPixmap(QPixmap.fromImage(img_copy))
+                return img_copy
             elif index == 1:
                 t1_img = self.t1(rgb_array)
                 self.ui.label_view_img.setPixmap(QPixmap.fromImage(t1_img))
+                return t1_img
             elif index == 2:
                 t2_img = self.t2(rgb_array)
                 self.ui.label_view_img.setPixmap(QPixmap.fromImage(t2_img))
+                return t2_img
             elif index == 3:
                 sd_img = self.SD(rgb_array)
                 self.ui.label_view_img.setPixmap(QPixmap.fromImage(sd_img))
+                return sd_img
 
         except Exception as e:
             print(e)
             self.popUpErrorMsg("select size first")
 
-    
     def adjust_contrast(self, value):
         try:
 
-            # Calculate the contrast factor based on the slider value 
-            contrast_factor = (value + 50) / 100.0
+            # Calculate the contrast factor based on the slider value
+            contrast_factor = value /100
+
+            # Create a copy of the original image and apply the contrast adjustment
+            # index = self.ui.comboBox_property.currentIndex()
+            # self.rgbImage = self.combobox_select_property(index)
+            self.rgbImage = self.change_size_combo(2)
+            adjusted_image = self.rgbImage.copy()
+            greyImg = qimage2ndarray.rgb_view(adjusted_image)
+            greyImg  = cv2.cvtColor(greyImg, cv2.COLOR_RGB2GRAY) 
+            
+            adjusted_image = ((greyImg/255.0)**(1/contrast_factor))*255.0  
+            greyImg = qimage2ndarray.array2qimage(adjusted_image)
+            
+            # Display the adjusted image
+            self.ui.label_view_img.setPixmap(QPixmap.fromImage(greyImg))
+        except Exception as e:
+            print(e)
+            self.popUpErrorMsg("select image first")
+    
+    def adjusted_brightness(self, value):
+        try:
+
+            # Calculate the contrast factor based on the slider value
+            contrast_factor = value /100
 
             # Create a copy of the original image and apply the contrast adjustment
             self.rgbImage = self.change_size_combo(2)
             adjusted_image = self.rgbImage.copy()
-            for i in range(adjusted_image.width()):
-                for j in range(adjusted_image.height()):
-                    pixel = adjusted_image.pixel(i, j)
-                    # Get the RGBa values of the pixel and convert them to integers
-                    r, g, b, a = QColor(pixel).getRgb()
-                    r = int((r - 128) * contrast_factor + 128)
-                    g = int((g - 128) * contrast_factor + 128)
-                    b = int((b - 128) * contrast_factor + 128)
-                    adjusted_image.setPixel(i, j, qRgba(r, g, b, a))
-
+            greyImg = qimage2ndarray.rgb_view(adjusted_image)
+            greyImg  = cv2.cvtColor(greyImg, cv2.COLOR_RGB2GRAY) 
+            
+            adjusted_image =  contrast_factor * greyImg
+            greyImg = qimage2ndarray.array2qimage(adjusted_image)
+            
             # Display the adjusted image
-            self.ui.label_view_img.setPixmap(QPixmap.fromImage(adjusted_image))
+            self.ui.label_view_img.setPixmap(QPixmap.fromImage(greyImg))
         except Exception as e:
             print(e)
             self.popUpErrorMsg("select image first")
@@ -292,12 +317,46 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.imgT2 = qimage2ndarray.rgb_view(self.imgT2)
             self.imgSD = qimage2ndarray.rgb_view(self.imgSD)
 
+            # scale the image to the size of the label
+            currentWidth = self.ui.label_view_img.width()
+            currentHeight = self.ui.label_view_img.height()
+            
+            # print(type(currentWidth))
+            # print(type(int(self.row)))
+            # print(type(self.change_size_combo(0)))
+        
             x = event.pos().x()
             y = event.pos().y()
+            
+            # print(round((x*(self.change_size_combo(0)))/currentWidth) , round((y*(self.change_size_combo(1)))/currentHeight))
+            new_x = round((x*(self.change_size_combo(0)))/currentWidth)
+            new_y = round((y*(self.change_size_combo(1)))/currentHeight)
+            
+            
+            
 
-            self.ui.lineEdit_t1.setText(str(self.imgT1[x, y][1]))
-            self.ui.lineEdit_t2.setText(str(self.imgT2[x, y][1]))
-            self.ui.lineEdit_sd.setText(str(self.imgSD[x, y][1]))
+            # Highlight clicked pixel with a dot point
+            image_map = {
+                1: self.imgT1,
+                2: self.imgT2,
+                3: self.imgSD
+            }
+
+            # get the selected image based on the currentIndex value
+            selected_image = image_map.get(self.ui.comboBox_property.currentIndex())
+
+            if selected_image is not None:
+                # create a QPainter object for the selected image
+                dotted_img = QPainter(selected_image)
+                dotted_img.setBrush(QColor(255, 0, 0))
+                dotted_img.drawEllipse(x, y, 5, 5)
+                dotted_img.end()
+                self.ui.label_view_img.setPixmap(QPixmap.fromImage(selected_image))
+            
+
+            self.ui.lineEdit_t1.setText(str(self.imgT1[new_x,new_y][1]))
+            self.ui.lineEdit_t2.setText(str(self.imgT2[new_x,new_y][1]))
+            self.ui.lineEdit_sd.setText(str(self.imgSD[new_x,new_y][1]))
         except Exception as e:
             print(e)
 
@@ -311,17 +370,34 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         except Exception as e:
             print(e)
 
+    def map_intensity(value):
+        if value <= 50:
+            return 0
+        elif value <= 100:
+            return 50
+        elif value <= 150:
+            return 100
+        elif value <= 200:
+            return 150
+        else:
+            return 255
+    
     def t1(self, in_image):
         try:
             # Define the conditionals and corresponding values
             conditions = [
-                in_image == 255,  # white matter
-                in_image == 150,  # gray matter
-                in_image == 90,   # fat
-                in_image == 0     # water
+                (in_image >= 0) & (in_image < 90),    # water
+                (in_image >= 90) & (in_image < 150), # fat
+                (in_image >= 150) & (in_image < 255),# gray matter
+                (in_image == 255)                    # white matter
             ]
-            values = [self.map_range(500), self.map_range(
-                800), self.map_range(250), self.map_range(3000)]
+
+            values = [
+                self.map_range(3000), # water
+                self.map_range(250),  # fat
+                self.map_range(800),  # gray matter
+                self.map_range(500)   # white matter
+            ]
 
             # Apply the conditionals and assign values in a single step
             shepp_t1 = np.select(conditions, values,
@@ -338,13 +414,19 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
             # Define the conditionals and corresponding values
             conditions = [
-                in_image == 255,  # white matter
-                in_image == 150,  # gray matter
-                in_image == 90,   # fat
-                in_image == 0     # water
+                (in_image >= 0) & (in_image < 90),    # water
+                (in_image >= 90) & (in_image < 150), # fat
+                (in_image >= 150) & (in_image < 255),# gray matter
+                (in_image == 255)                    # white matter
             ]
-            values = [self.map_range(80), self.map_range(
-                100), self.map_range(55), self.map_range(2000)]
+
+            values = [
+                self.map_range(80), # water
+                self.map_range(100),  # fat
+                self.map_range(55),  # gray matter
+                self.map_range(2000)   # white matter
+            ]
+            
 
             # Apply the conditionals and assign values in a single step
             shepp_t2 = np.select(conditions, values,
@@ -360,13 +442,19 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def SD(self, in_image):
         try:
-
             # Define the conditionals and corresponding values
             conditions = [
-                in_image == 255,  # white matter
-                in_image == 150,  # gray matter
-                in_image == 90,   # fat
-                in_image == 0     # water
+                (in_image >= 0) & (in_image < 90),    # water
+                (in_image >= 90) & (in_image < 150), # fat
+                (in_image >= 150) & (in_image < 255),# gray matter
+                (in_image == 255)                    # white matter
+            ]
+
+            values = [
+                self.map_range(0.1), # water
+                self.map_range(0.2),  # fat
+                self.map_range(0.5),  # gray matter
+                self.map_range(0.7)   # white matter
             ]
             values = [self.map_range(0.1), self.map_range(
                 0.2), self.map_range(0.5), self.map_range(0.7)]
