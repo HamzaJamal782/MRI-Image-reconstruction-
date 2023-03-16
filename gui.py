@@ -35,7 +35,7 @@ class Ui_MainWindow(object):
 "{\n"
 "\n"
 "font-family: \'Josefin Sans\', sans-serif;\n"
-"font-size: 12pt;\n"
+"font-size: 9pt;\n"
 "font-weight: 500;\n"
 "letter-spacing: 0.22rem;\n"
 "font-style: oblique;\n"
@@ -264,7 +264,22 @@ class Ui_MainWindow(object):
 "    outline: 0;\n"
 "\n"
 "}\n"
-"")
+"\n"
+"QSlider::groove:horizontal {\n"
+"    background-color: #dddddd;\n"
+"    border: 1px solid #aaaaaa;\n"
+"    height: 8px;\n"
+"    border-radius: 4px;\n"
+"}\n"
+"\n"
+"QSlider::handle:horizontal {\n"
+"    background-color: #fea735;\n"
+"    border: 1px solid #aaaaaa;\n"
+"    width: 16px;\n"
+"    height: 16px;\n"
+"    margin: -4px 0;\n"
+"    border-radius: 8px;\n"
+"}")
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
@@ -299,7 +314,7 @@ class Ui_MainWindow(object):
         self.label_7 = QtWidgets.QLabel(self.tab_phantom)
         font = QtGui.QFont()
         font.setFamily("Josefin Sans,sans-serif")
-        font.setPointSize(12)
+        font.setPointSize(9)
         font.setBold(True)
         font.setItalic(True)
         font.setWeight(62)
@@ -320,6 +335,13 @@ class Ui_MainWindow(object):
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.label = QtWidgets.QLabel(self.tab_phantom)
+        font = QtGui.QFont()
+        font.setFamily("Josefin Sans,sans-serif")
+        font.setPointSize(9)
+        font.setBold(True)
+        font.setItalic(True)
+        font.setWeight(62)
+        self.label.setFont(font)
         self.label.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.label.setObjectName("label")
         self.horizontalLayout.addWidget(self.label)
@@ -328,6 +350,40 @@ class Ui_MainWindow(object):
         self.horizontalLayout.addWidget(self.comboBox_property)
         self.horizontalLayout.setStretch(1, 1)
         self.horizontalLayout_3.addLayout(self.horizontalLayout)
+        self.horizontalLayout_6 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_6.setContentsMargins(0, -1, -1, -1)
+        self.horizontalLayout_6.setObjectName("horizontalLayout_6")
+        self.label_8 = QtWidgets.QLabel(self.tab_phantom)
+        font = QtGui.QFont()
+        font.setFamily("Josefin Sans,sans-serif")
+        font.setPointSize(9)
+        font.setBold(True)
+        font.setItalic(True)
+        font.setWeight(62)
+        self.label_8.setFont(font)
+        self.label_8.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.label_8.setObjectName("label_8")
+        self.horizontalLayout_6.addWidget(self.label_8)
+        self.slider_contrast = QtWidgets.QSlider(self.tab_phantom)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.slider_contrast.sizePolicy().hasHeightForWidth())
+        self.slider_contrast.setSizePolicy(sizePolicy)
+        self.slider_contrast.setMaximum(100)
+        self.slider_contrast.setSingleStep(10)
+        self.slider_contrast.setProperty("value", 50)
+        self.slider_contrast.setSliderPosition(50)
+        self.slider_contrast.setOrientation(QtCore.Qt.Horizontal)
+        self.slider_contrast.setTickPosition(QtWidgets.QSlider.NoTicks)
+        self.slider_contrast.setTickInterval(0)
+        self.slider_contrast.setObjectName("slider_contrast")
+        self.horizontalLayout_6.addWidget(self.slider_contrast)
+        self.label_9 = QtWidgets.QLabel(self.tab_phantom)
+        self.label_9.setEnabled(False)
+        self.label_9.setObjectName("label_9")
+        self.horizontalLayout_6.addWidget(self.label_9)
+        self.horizontalLayout_3.addLayout(self.horizontalLayout_6)
         self.verticalLayout_5.addLayout(self.horizontalLayout_3)
         self.verticalLayout_4 = QtWidgets.QVBoxLayout()
         self.verticalLayout_4.setObjectName("verticalLayout_4")
@@ -454,6 +510,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
         self.tabWidget.setCurrentIndex(0)
+        self.slider_contrast.sliderMoved['int'].connect(self.label_9.setNum) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -462,6 +519,8 @@ class Ui_MainWindow(object):
         self.pushButton_Browse.setText(_translate("MainWindow", "Browse"))
         self.label_7.setText(_translate("MainWindow", "choose size of image"))
         self.label.setText(_translate("MainWindow", "choose property"))
+        self.label_8.setText(_translate("MainWindow", "contrast"))
+        self.label_9.setText(_translate("MainWindow", "0"))
         self.label_2.setText(_translate("MainWindow", "T1"))
         self.label_3.setText(_translate("MainWindow", "T2"))
         self.label_4.setText(_translate("MainWindow", "SD"))

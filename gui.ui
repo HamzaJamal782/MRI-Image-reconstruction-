@@ -35,7 +35,7 @@ QLabel
 {
 
 font-family: 'Josefin Sans', sans-serif;
-font-size: 12pt;
+font-size: 9pt;
 font-weight: 500;
 letter-spacing: 0.22rem;
 font-style: oblique;
@@ -264,7 +264,22 @@ QComboBox QAbstractItemView
     outline: 0;
 
 }
-</string>
+
+QSlider::groove:horizontal {
+    background-color: #dddddd;
+    border: 1px solid #aaaaaa;
+    height: 8px;
+    border-radius: 4px;
+}
+
+QSlider::handle:horizontal {
+    background-color: #fea735;
+    border: 1px solid #aaaaaa;
+    width: 16px;
+    height: 16px;
+    margin: -4px 0;
+    border-radius: 8px;
+}</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -303,7 +318,7 @@ QComboBox QAbstractItemView
            <number>57</number>
           </property>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,0,0">
+           <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,0,0,0">
             <item>
              <widget class="QPushButton" name="pushButton_Browse">
               <property name="text">
@@ -318,7 +333,7 @@ QComboBox QAbstractItemView
                 <property name="font">
                  <font>
                   <family>Josefin Sans,sans-serif</family>
-                  <pointsize>12</pointsize>
+                  <pointsize>9</pointsize>
                   <weight>62</weight>
                   <italic>true</italic>
                   <bold>true</bold>
@@ -348,6 +363,15 @@ QComboBox QAbstractItemView
              <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1">
               <item>
                <widget class="QLabel" name="label">
+                <property name="font">
+                 <font>
+                  <family>Josefin Sans,sans-serif</family>
+                  <pointsize>9</pointsize>
+                  <weight>62</weight>
+                  <italic>true</italic>
+                  <bold>true</bold>
+                 </font>
+                </property>
                 <property name="text">
                  <string>choose property</string>
                 </property>
@@ -358,6 +382,73 @@ QComboBox QAbstractItemView
               </item>
               <item>
                <widget class="QComboBox" name="comboBox_property"/>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_6">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QLabel" name="label_8">
+                <property name="font">
+                 <font>
+                  <family>Josefin Sans,sans-serif</family>
+                  <pointsize>9</pointsize>
+                  <weight>62</weight>
+                  <italic>true</italic>
+                  <bold>true</bold>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>contrast</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QSlider" name="slider_contrast">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="maximum">
+                 <number>100</number>
+                </property>
+                <property name="singleStep">
+                 <number>10</number>
+                </property>
+                <property name="value">
+                 <number>50</number>
+                </property>
+                <property name="sliderPosition">
+                 <number>50</number>
+                </property>
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="tickPosition">
+                 <enum>QSlider::NoTicks</enum>
+                </property>
+                <property name="tickInterval">
+                 <number>0</number>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_9">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="text">
+                 <string>0</string>
+                </property>
+               </widget>
               </item>
              </layout>
             </item>
@@ -575,5 +666,22 @@ border: 1px solid lightgrey;
   </widget>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>slider_contrast</sender>
+   <signal>sliderMoved(int)</signal>
+   <receiver>label_9</receiver>
+   <slot>setNum(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>715</x>
+     <y>148</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>767</x>
+     <y>151</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>
