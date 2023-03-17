@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
+    <width>814</width>
     <height>859</height>
    </rect>
   </property>
@@ -340,14 +340,7 @@ background-color: qlineargradient(spread:pad, x1:1, y1:0.493909, x2:0, y2:0.5110
            </widget>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,0,1,1,2">
-            <item>
-             <widget class="QPushButton" name="pushButton_Switch">
-              <property name="text">
-               <string>switch</string>
-              </property>
-             </widget>
-            </item>
+           <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,1,1,2">
             <item>
              <widget class="QPushButton" name="pushButton_Browse">
               <property name="text">
@@ -620,6 +613,12 @@ background-color: qlineargradient(spread:pad, x1:1, y1:0.493909, x2:0, y2:0.5110
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
+              <property name="maximumSize">
+               <size>
+                <width>1920</width>
+                <height>720</height>
+               </size>
+              </property>
               <property name="mouseTracking">
                <bool>true</bool>
               </property>
@@ -830,12 +829,12 @@ border: 1px solid lightgrey;
    <slot>setNum(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>715</x>
-     <y>148</y>
+     <x>752</x>
+     <y>106</y>
     </hint>
     <hint type="destinationlabel">
-     <x>767</x>
-     <y>151</y>
+     <x>784</x>
+     <y>106</y>
     </hint>
    </hints>
   </connection>
@@ -846,12 +845,44 @@ border: 1px solid lightgrey;
    <slot>setNum(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>715</x>
-     <y>170</y>
+     <x>752</x>
+     <y>137</y>
     </hint>
     <hint type="destinationlabel">
-     <x>765</x>
-     <y>172</y>
+     <x>784</x>
+     <y>137</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>slider_contrast</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>label_9</receiver>
+   <slot>setNum(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>681</x>
+     <y>90</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>784</x>
+     <y>106</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>slider_brightness</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>label_15</receiver>
+   <slot>setNum(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>631</x>
+     <y>131</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>784</x>
+     <y>137</y>
     </hint>
    </hints>
   </connection>

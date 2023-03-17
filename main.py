@@ -3,6 +3,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import QFileDialog, QApplication, QMessageBox
 from PyQt5.QtGui import QPixmap, QPainter, QColor, QImage, QColor, qRgba
 from gui import Ui_MainWindow
+# from gui_classic import Ui_MainWindow
 import sys
 import math as m
 import numpy as np
@@ -54,7 +55,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         # adding items to combobox size
         self.ui.comboBox_size.addItems(
-            ["16x16", "32x32", "64x64", "128x128", "256x256", "512x512"])
+            ["16x16", "32x32", "64x64", "128x128", "256x256", "512x512","1024x1024"])
 
         # connect ui elements to functions
         self.ui.pushButton_Browse.clicked.connect(self.browse)
@@ -69,6 +70,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.popUpErrorMsg)
         self.ui.slider_contrast.valueChanged.connect(self.adjust_contrast)
         self.ui.slider_brightness.valueChanged.connect(self.adjusted_brightness)
+        self.ui.comboBox_property.currentIndexChanged.connect(self.resetSliders)
 
         # set default value of combobox_size to empty
         self.ui.comboBox_size.setCurrentIndex(-1)
@@ -96,7 +98,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             print(e)
 
     # function to choose size of image from combobox_size
-
     def change_size_combo(self, flag):
         try:
             resized_imge = None
@@ -238,7 +239,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     # combobox function  for selecting image property
     def combobox_select_property(self, index):
         try:
-
             img_copy = self.change_size_combo(2)
             rgb_array = qimage2ndarray.rgb_view(img_copy)
 
@@ -262,25 +262,32 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             print(e)
             self.popUpErrorMsg("select size first")
 
+    def resetSliders(self):
+        # get the current value of the slider
+        brughtness_slider_Value = self.ui.slider_brightness.value()
+        contrast_slider_Value = self.ui.slider_contrast.value()
+        # check if the current value is not equal to the initial value
+        if (contrast_slider_Value & brughtness_slider_Value) != 100:
+            # set the value of the slider to its initial value
+            self.ui.slider_brightness.setValue(100)
+            self.ui.slider_contrast.setValue(100)
+        
     def adjust_contrast(self, value):
         try:
-
             # Calculate the contrast factor based on the slider value
             contrast_factor = value /100
 
             # Create a copy of the original image and apply the contrast adjustment
-            # index = self.ui.comboBox_property.currentIndex()
-            # self.rgbImage = self.combobox_select_property(index)
-            self.rgbImage = self.change_size_combo(2)
-            adjusted_image = self.rgbImage.copy()
-            greyImg = qimage2ndarray.rgb_view(adjusted_image)
-            greyImg  = cv2.cvtColor(greyImg, cv2.COLOR_RGB2GRAY) 
-            
-            adjusted_image = ((greyImg/255.0)**(1/contrast_factor))*255.0  
-            greyImg = qimage2ndarray.array2qimage(adjusted_image)
+            index = self.ui.comboBox_property.currentIndex()
+            img_1 = self.combobox_select_property(index)
+
+            img_2 = qimage2ndarray.rgb_view(img_1)    
+            img_3 = ((img_2/255.0)**(1/contrast_factor))*255.0  
+
+            final_img = qimage2ndarray.array2qimage(img_3)
             
             # Display the adjusted image
-            self.ui.label_view_img.setPixmap(QPixmap.fromImage(greyImg))
+            self.ui.label_view_img.setPixmap(QPixmap.fromImage(final_img))
         except Exception as e:
             print(e)
             self.popUpErrorMsg("select image first")
@@ -289,19 +296,20 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         try:
 
             # Calculate the contrast factor based on the slider value
-            contrast_factor = value /100
+            brightness_factor = value /100
 
             # Create a copy of the original image and apply the contrast adjustment
-            self.rgbImage = self.change_size_combo(2)
-            adjusted_image = self.rgbImage.copy()
-            greyImg = qimage2ndarray.rgb_view(adjusted_image)
-            greyImg  = cv2.cvtColor(greyImg, cv2.COLOR_RGB2GRAY) 
-            
-            adjusted_image =  contrast_factor * greyImg
-            greyImg = qimage2ndarray.array2qimage(adjusted_image)
+            index = self.ui.comboBox_property.currentIndex()
+            img_1 = self.combobox_select_property(index)
+
+            img_2 = qimage2ndarray.rgb_view(img_1)    
+
+            img_3 = brightness_factor * img_2
+
+            final_img = qimage2ndarray.array2qimage(img_3)
             
             # Display the adjusted image
-            self.ui.label_view_img.setPixmap(QPixmap.fromImage(greyImg))
+            self.ui.label_view_img.setPixmap(QPixmap.fromImage(final_img))
         except Exception as e:
             print(e)
             self.popUpErrorMsg("select image first")
@@ -335,7 +343,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             
             
 
-            # Highlight clicked pixel with a dot point
+            '''# Highlight clicked pixel with a dot point
             image_map = {
                 1: self.imgT1,
                 2: self.imgT2,
@@ -351,7 +359,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 dotted_img.setBrush(QColor(255, 0, 0))
                 dotted_img.drawEllipse(x, y, 5, 5)
                 dotted_img.end()
-                self.ui.label_view_img.setPixmap(QPixmap.fromImage(selected_image))
+                self.ui.label_view_img.setPixmap(QPixmap.fromImage(selected_image))'''
             
 
             self.ui.lineEdit_t1.setText(str(self.imgT1[new_x,new_y][1]))
@@ -361,47 +369,43 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             print(e)
 
     # map range function from brain tissue properties to image pixel values
-
     def map_range(self, input_value):
         try:
-            # 2500 is the max value of the property and 255 is the max pixel value
-            output_value = input_value * (255 / 300)
+            # 3000 is the max value of the property and 255 is the max pixel value
+            output_value = input_value * (255 / 4000) 
             return output_value
         except Exception as e:
             print(e)
 
-    def map_intensity(value):
-        if value <= 50:
-            return 0
-        elif value <= 100:
-            return 50
-        elif value <= 150:
-            return 100
-        elif value <= 200:
-            return 150
-        else:
-            return 255
-    
     def t1(self, in_image):
         try:
             # Define the conditionals and corresponding values
             conditions = [
-                (in_image >= 0) & (in_image < 90),    # water
-                (in_image >= 90) & (in_image < 150), # fat
-                (in_image >= 150) & (in_image < 255),# gray matter
-                (in_image == 255)                    # white matter
+                (in_image >= 0) & (in_image < 31),              # Air                       
+                (in_image >= 31) & (in_image < 63),             # Fat                       
+                (in_image >= 63) & (in_image < 95),             # Blood                     
+                (in_image >= 95) & (in_image < 127),            # White matter              
+                (in_image >= 127) & (in_image < 159),           # Gray matter               
+                (in_image >= 159) & (in_image < 191),           # Muscle                    
+                (in_image >= 191) & (in_image < 223),           # Cerebrospinal fluid (CSF) 
+                (in_image >= 223) & (in_image <= 225),          # Bone                      
             ]
 
+            
             values = [
-                self.map_range(3000), # water
-                self.map_range(250),  # fat
-                self.map_range(800),  # gray matter
-                self.map_range(500)   # white matter
+                self.map_range(1000),   # Air                           
+                self.map_range(300),    # Fat                           
+                self.map_range(250),    # Blood                         
+                self.map_range(140),    # White matter                  
+                self.map_range(120),    # Gray matter                    
+                self.map_range(150),    # Muscle                        
+                self.map_range(50),     # Cerebrospinal fluid (CSF)     
+                self.map_range(10)      # Bone                          
             ]
 
             # Apply the conditionals and assign values in a single step
             shepp_t1 = np.select(conditions, values,
-                                 default=255).astype(np.uint8)
+                                 default=0).astype(np.uint8)
 
             # Convert image to qimage
             shepp_t1 = qimage2ndarray.array2qimage(shepp_t1)
@@ -414,23 +418,32 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
             # Define the conditionals and corresponding values
             conditions = [
-                (in_image >= 0) & (in_image < 90),    # water
-                (in_image >= 90) & (in_image < 150), # fat
-                (in_image >= 150) & (in_image < 255),# gray matter
-                (in_image == 255)                    # white matter
+                (in_image >= 0) & (in_image < 31),              # Air                       
+                (in_image >= 31) & (in_image < 63),             # Fat                       
+                (in_image >= 63) & (in_image < 95),             # Blood                     
+                (in_image >= 95) & (in_image < 127),            # White matter              
+                (in_image >= 127) & (in_image < 159),           # Gray matter               
+                (in_image >= 159) & (in_image < 191),           # Muscle                    
+                (in_image >= 191) & (in_image < 223),           # Cerebrospinal fluid (CSF) 
+                (in_image >= 223) & (in_image <= 225),          # Bone                      
             ]
 
+                            
             values = [
-                self.map_range(80), # water
-                self.map_range(100),  # fat
-                self.map_range(55),  # gray matter
-                self.map_range(2000)   # white matter
+                self.map_range(4000),       # Air                           
+                self.map_range(250),        # Fat                           
+                self.map_range(200),        # Blood                         
+                self.map_range(110),        # White matter                  
+                self.map_range(100),        # Gray matter                    
+                self.map_range(90),         # Muscle                        
+                self.map_range(3000),       # Cerebrospinal fluid (CSF)     
+                self.map_range(10)          # Bone                          
             ]
             
 
             # Apply the conditionals and assign values in a single step
             shepp_t2 = np.select(conditions, values,
-                                 default=200).astype(np.uint8)
+                                 default=0).astype(np.uint8)
             # print(shepp_t2)
 
             # Convert image to qimage
@@ -444,21 +457,28 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         try:
             # Define the conditionals and corresponding values
             conditions = [
-                (in_image >= 0) & (in_image < 90),    # water
-                (in_image >= 90) & (in_image < 150), # fat
-                (in_image >= 150) & (in_image < 255),# gray matter
-                (in_image == 255)                    # white matter
+                (in_image >= 0) & (in_image < 31),              # Air                       
+                (in_image >= 31) & (in_image < 63),             # Fat                       
+                (in_image >= 63) & (in_image < 95),             # Blood                     
+                (in_image >= 95) & (in_image < 127),            # White matter              
+                (in_image >= 127) & (in_image < 159),           # Gray matter               
+                (in_image >= 159) & (in_image < 191),           # Muscle                    
+                (in_image >= 191) & (in_image < 223),           # Cerebrospinal fluid (CSF) 
+                (in_image >= 223) & (in_image <= 255),          # Bone                      
             ]
 
+                            
             values = [
-                self.map_range(0.1), # water
-                self.map_range(0.2),  # fat
-                self.map_range(0.5),  # gray matter
-                self.map_range(0.7)   # white matter
+                self.map_range(0),          # Air                           
+                self.map_range(0),          # Fat                           
+                self.map_range(0),          # Blood                         
+                self.map_range(0),          # White matter                  
+                self.map_range(0),          # Gray matter                    
+                self.map_range(0),          # Muscle                        
+                self.map_range(0),          # Cerebrospinal fluid (CSF)     
+                self.map_range(0)           # Bone                          
             ]
-            values = [self.map_range(0.1), self.map_range(
-                0.2), self.map_range(0.5), self.map_range(0.7)]
-
+            
             # Apply the conditionals and assign values in a single step
             shepp_SD = np.select(conditions, values,
                                  default=0.7).astype(np.uint8)

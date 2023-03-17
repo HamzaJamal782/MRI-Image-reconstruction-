@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(800, 859)
+        MainWindow.resize(814, 859)
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(".\\SheppLogan_Phantom256.jpg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         MainWindow.setWindowIcon(icon)
@@ -321,9 +321,6 @@ class Ui_MainWindow(object):
         self.verticalLayout_5.addWidget(self.line)
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
-        self.pushButton_Switch = QtWidgets.QPushButton(self.tab_phantom)
-        self.pushButton_Switch.setObjectName("pushButton_Switch")
-        self.horizontalLayout_3.addWidget(self.pushButton_Switch)
         self.pushButton_Browse = QtWidgets.QPushButton(self.tab_phantom)
         self.pushButton_Browse.setObjectName("pushButton_Browse")
         self.horizontalLayout_3.addWidget(self.pushButton_Browse)
@@ -474,9 +471,9 @@ class Ui_MainWindow(object):
         self.verticalLayout_9.addLayout(self.horizontalLayout_10)
         self.horizontalLayout_6.addLayout(self.verticalLayout_9)
         self.horizontalLayout_3.addLayout(self.horizontalLayout_6)
+        self.horizontalLayout_3.setStretch(1, 1)
         self.horizontalLayout_3.setStretch(2, 1)
-        self.horizontalLayout_3.setStretch(3, 1)
-        self.horizontalLayout_3.setStretch(4, 2)
+        self.horizontalLayout_3.setStretch(3, 2)
         self.verticalLayout_5.addLayout(self.horizontalLayout_3)
         self.verticalLayout_4 = QtWidgets.QVBoxLayout()
         self.verticalLayout_4.setObjectName("verticalLayout_4")
@@ -486,6 +483,7 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.label_view_img.sizePolicy().hasHeightForWidth())
         self.label_view_img.setSizePolicy(sizePolicy)
+        self.label_view_img.setMaximumSize(QtCore.QSize(1920, 720))
         self.label_view_img.setMouseTracking(True)
         self.label_view_img.setStyleSheet("QLabel{\n"
 "border: 1px solid lightgrey;\n"
@@ -605,12 +603,13 @@ class Ui_MainWindow(object):
         self.tabWidget.setCurrentIndex(0)
         self.slider_contrast.sliderMoved['int'].connect(self.label_9.setNum) # type: ignore
         self.slider_brightness.sliderMoved['int'].connect(self.label_15.setNum) # type: ignore
+        self.slider_contrast.valueChanged['int'].connect(self.label_9.setNum) # type: ignore
+        self.slider_brightness.valueChanged['int'].connect(self.label_15.setNum) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Image Reconstruction"))
-        self.pushButton_Switch.setText(_translate("MainWindow", "switch"))
         self.pushButton_Browse.setText(_translate("MainWindow", "Browse"))
         self.label_7.setText(_translate("MainWindow", "size"))
         self.label.setText(_translate("MainWindow", "property"))
