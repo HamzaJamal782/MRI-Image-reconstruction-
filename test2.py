@@ -41,6 +41,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         self.count = 0
         self.flag = 0
+        self.phantom_flag = False
 
         # for plot sequence
         self.figure_sequence = plt.figure()
@@ -127,9 +128,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         self.figure_phantom.clear()
         self.canvas_phantom.draw()
-    def Highlighte(self):
 
-        
+    def Highlighte(self):
         image_map = {
                 0: self.orgImg,
                 1: self.imgT1,
@@ -150,10 +150,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             # create a QPainter object for the selected image
             dotted_img = QPainter(selected_image)
             # dotted_img = QPainter(self.pixmap())
-            pen = QPen(Qt.red, 0.5)
+            pen = QPen(Qt.red, 1)
             dotted_img.setPen(pen)
-            print(self.ui.label_view_img.width()/16)
-            print(self.ui.label_view_img.height()/16)
+            print(self.ui.label_view_img.width()/self.row)
+            print(self.ui.label_view_img.height()/self.row)
 
             dotted_img.drawRect(self.x, self.y, 1, 1)
             dotted_img.end()
@@ -288,11 +288,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                         PixelSummation = [sum(cnt) for cnt in zip(PixelSummation, self.M1[i][j])]
                 self.k_space[i1][j1] = PixelSummation
                 self.fourier[i1][j1] = complex(PixelSummation[1],PixelSummation[0])
-        self.generat_kspace()
+            self.generat_kspace()
                 
         # print(self.fourier)
 
     def generat_phantom(self):
+        self.phantom_flag = True
         self.figure_phantom.clear()
         result = np.fft.ifft2(self.fourier)
         # print(result)
@@ -307,15 +308,15 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         
         ax = self.figure_kspace.add_subplot(111)
         
-        for cnt in range(self.row-1,-1,-1):
-            magnitude_spectrum = np.abs(self.fourier)
+        # for cnt in range(self.row-1,-1,-1):
+        magnitude_spectrum = np.abs(self.fourier)
 
-            # self.ft_shifted2 = np.fft.fft(magnitude_spectrum)
-        # print(cnt)
-            magnitude_spectrum[:cnt] = 0
-            ax.imshow(magnitude_spectrum, cmap='gray')
-            self.canvas_kspace.draw()
-            self.canvas_kspace.start_event_loop(0.1)
+        # self.ft_shifted2 = np.fft.fft(magnitude_spectrum)
+    # print(cnt)
+        # magnitude_spectrum[:cnt] = 0
+        ax.imshow(magnitude_spectrum, cmap='gray')
+        self.canvas_kspace.draw()
+        self.canvas_kspace.start_event_loop(0.0001)
 
         # self.ft_shifted2 = np.fft.fftshift(magnitude_spectrum)
         # ax.imshow(np.abs(self.ft_shifted2), cmap='gray')
@@ -335,7 +336,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         
     def adjust_contrast(self, value):
-        # try:
+        try:
+            if self.phantom_flag == False:
+                self.figure_phantom.clear()
+                self.canvas_phantom.draw()
+            # self.clearFigures()
             # Calculate the contrast factor based on the slider value
             contrast_factor = value /100
 
@@ -350,12 +355,16 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             
             # Display the adjusted image
             self.ui.label_view_img.setPixmap(QPixmap.fromImage(final_img))
-        # except Exception as e:
-        #     print(e)
-        #     self.popUpErrorMsg("select image first")
+        except Exception as e:
+            print(e)
+            self.popUpErrorMsg("select image first")
 
     def adjusted_brightness(self, value):
         try:
+            if self.phantom_flag == False:
+                self.figure_phantom.clear()
+                self.canvas_phantom.draw()
+            # self.clearFigures()
 
             # Calculate the contrast factor based on the slider value
             brightness_factor = value /100
@@ -502,7 +511,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
             # Apply the conditionals and assign values in a single step
             shepp_t1 = np.select(conditions, values,
-                                 default=0).astype(np.uint8)
+                                default=0).astype(np.uint8)
 
             # Convert image to qimage
             shepp_t1 = qimage2ndarray.array2qimage(shepp_t1)
