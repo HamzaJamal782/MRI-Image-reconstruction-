@@ -10,7 +10,7 @@
 
 > code
 
-## Usage
+## CODE
 
 ```python
 from PyQt5 import QtWidgets, QtCore
